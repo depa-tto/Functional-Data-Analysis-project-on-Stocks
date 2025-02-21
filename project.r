@@ -21,3 +21,10 @@ bonduelle <- bonduelle$BON.PA.Close
 head(bonduelle)
 
 
+# travel 
+
+trivago <- getSymbols("TRVG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+trivago <- trivago$TRVG.Close
+head(trivago)
+
+
