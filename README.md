@@ -1,1 +1,1 @@
-# Functional-Data-Analysis-Project
+Functional Data Analysis Project
