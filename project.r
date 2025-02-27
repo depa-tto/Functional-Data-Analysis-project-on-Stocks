@@ -74,3 +74,18 @@ orsted <- orsted$ORSTED.CO.Close
 head(orsted)
 
 
+# logistic
+
+zalando <- getSymbols("ZAL.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+zalando <- zalando$ZAL.DE.Close
+head(zalando)
+
+ups <- getSymbols("UPS", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+ups <- ups$UPS.Close
+head(ups)
+
+amazon <- getSymbols("AMZN", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+amazon <- amazon$AMZN.Close
+head(amazon)
+
+
