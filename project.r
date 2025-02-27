@@ -110,6 +110,35 @@ leonardo <- getSymbols("LDO.MI", src = "yahoo", from="2020-01-01", to = "2022-12
 leonardo <- leonardo$LDO.MI.Close
 head(leonardo)
 
+# Automobile companies
+
+Volkswagen <- getSymbols("VOW3.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Volkswagen <- Volkswagen$VOW3.DE.Close
+head(Volkswagen)
+
+
+Ferrari <- getSymbols("RACE.MI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Ferrari <- Ferrari$RACE.MI.Close
+head(Ferrari)
+
+Stellantis <- getSymbols("STLAM.MI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Stellantis <- Stellantis$STLAM.MI.Close
+head(Stellantis)
+
+
+
+Renault <- getSymbols("RNO.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Renault <- Renault$RNO.PA.Close
+head(Renault)
+
+
+Mercedes_Benz_Group <- getSymbols("MBG.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Mercedes_Benz_Group <- Mercedes_Benz_Group$MBG.DE.Close
+head(Mercedes_Benz_Group)
+
+BMW <- getSymbols("BMW.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+BMW <- BMW$BMW.DE.Close
+head(BMW)
 
 
 
