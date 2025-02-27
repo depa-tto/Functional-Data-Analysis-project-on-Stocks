@@ -27,4 +27,23 @@ trivago <- getSymbols("TRVG", src = "yahoo", from="2020-01-01", to = "2022-12-31
 trivago <- trivago$TRVG.Close
 head(trivago)
 
+booking <- getSymbols("BKNG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+booking <- booking$BKNG.Close
+head(booking)
 
+ryanair <- getSymbols("RYA.IR", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+ryanair <- ryanair$RYA.IR.Close
+head(ryanair)
+
+ryanair <- getSymbols("RYA.IR", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+ryanair <- ryanair$RYA.IR.Close
+head(ryanair)
+
+
+airbnb <- getSymbols("ABNB", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+airbnb <- airbnb$ABNB.Close
+head(airbnb)
+
+trip.com <- getSymbols("TCOM", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+trip.com <- trip.com$TCOM.Close
+head(trip.com)
