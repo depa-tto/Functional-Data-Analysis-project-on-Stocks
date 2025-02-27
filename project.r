@@ -89,3 +89,27 @@ amazon <- amazon$AMZN.Close
 head(amazon)
 
 
+# technology
+
+spotify <- getSymbols("SPOT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+spotify <- spotify$SPOT.Close
+head(spotify)
+
+
+siemens <- getSymbols("SIE.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+siemens <- siemens$SIE.DE.Close
+head(siemens)
+
+
+airbus <- getSymbols("AIR.PA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+airbus <- airbus$AIR.PA.Close
+head(airbus)
+
+
+leonardo <- getSymbols("LDO.MI", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+leonardo <- leonardo$LDO.MI.Close
+head(leonardo)
+
+
+
+
