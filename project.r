@@ -47,3 +47,30 @@ head(airbnb)
 trip.com <- getSymbols("TCOM", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 trip.com <- trip.com$TCOM.Close
 head(trip.com)
+
+# oil and gas
+
+shell <- getSymbols("SHEL", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+shell <- shell$SHEL.Close
+head(shell)
+
+
+eni <- getSymbols("ENI.MI", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+eni <- eni$ENI.MI.Close
+head(eni)
+
+enel <- getSymbols("ENEL.MI", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+enel <- enel$ENEL.MI.Close
+head(enel)
+
+
+engie <- getSymbols("ENGI.PA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+engie <- engie$ENGI.PA.Close
+head(engie)
+
+
+orsted <- getSymbols("ORSTED.CO", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+orsted <- orsted$ORSTED.CO.Close
+head(orsted)
+
+
