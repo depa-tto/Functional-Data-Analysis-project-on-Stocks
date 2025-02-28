@@ -64,6 +64,10 @@ kraft_heinz <- kraft_heinz$KHC.Close
 head(kraft_heinz)
 
 food_stoks <- merge(nestle,unilever,danone,bonduelle,pepsi,mcdonalds,kelloggs,kraft_heinz)
+food_stoks <- data.frame(food_stoks)
+typeof(food_stoks)
+food_stoks$BON.PA.Close
+is.data.frame(food_stoks)
 head(food_stoks)
 sum(is.na(food_stoks))
 
@@ -106,15 +110,32 @@ head(uber)
 
 typeof(hilton)
 travel_stocks <- merge(trivago,booking,ryanair,lyft,trip.com,tripadvisor,hilton,uber)
+travel_stocks <- data.frame(travel_stocks)
+is.data.frame(travel_stocks)
+travel_stocks$TRVG.Close
 
 
-
-travel_stocks <- as.data.frame(travel_stocks)
 nrow(trivago)
 nrow(travel_stocks)
 head(trivago)
 sum(is.na(trivago))
-sum(is.na(travel_stocks$trivago))
+sum(is.na(travel_stocks$TRVG.Close))
+
+is.na(travel_stocks$TRVG.Close)
+
+travel_stocks$TRVG.Close
+
+trivago[14,]
+travel_stocks$TRVG.Close[14,]
+
+which(is.na(travel_stocks$TRVG.Close))
+travel_stocks[which(is.na(travel_stocks$TRVG.Close)),]
+trivago[which(is.na(trivago[,'TRVG.Close'])),]
+trivago
+
+df <- data.frame(travel_stocks[which(is.na(travel_stocks$TRVG.Close)),], trivago[which(is.na(travel_stocks$TRVG.Close)),])
+
+head(travel_stocks,100)
 
 typeof(travel_stocks)
 
