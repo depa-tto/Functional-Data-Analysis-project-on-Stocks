@@ -1,31 +1,47 @@
-install.packages("tidyquant")
-install.packages("quantmod")
-install.packages("ggplot2")
-install.packages("BatchGetSymbols")
-library("tidyquant")
+library(tidyquant)
 library(quantmod)
 library(tidyquant)
 library(tidyverse)
 library(dplyr)
 library(zoo)
 
+# fashion companies
 
-#Car&Fashion industry
+kering <- getSymbols("KER.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+kering <- kering$KER.PA.Close
+head(kering)
 
-Fashion  <- c("KER.PA", "CPRI", "RMS.PA", "MC.PA", "CFR.SW", "ADS.DE", "NKE.DE", "PUM.DE") 
+cpri <- getSymbols("CPRI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+cpri <- cpri$CPRI.Close
+head(cpri)
 
-fashion_data <- tq_get(Fashion, from = "2020-01-01", to = "2022-12-31")
+rms <- getSymbols("RMS.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+rms <- rms$RMS.PA.Close
+head(rms)
 
-close_fashion <- fashion_data[,c("date", "symbol", "close")]
+mc <- getSymbols("MC.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+mc <- mc$MC.PA.Close
+head(mc)
 
-close_fashion
+cfr <- getSymbols("CFR.SW", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+cfr <- cfr$CFR.SW.Close
+head(cfr)
 
-oil <- c("CHV.F", "REP.MC","TTE.PA")
+ads <- getSymbols("ADS.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+ads <- ads$ADS.DE.Close
+head(ads)
 
-oil_data <- tq_get(oil, from = "2020-01-01", to = "2022-12-31")
-close_oil <- oil_data[, c("date", "symbol", "close")]
+nke <- getSymbols("NKE.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+nke <- nke$NKE.DE.Close
+head(nke)
 
-head(close_oil)
+pum <- getSymbols("PUM.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+pum <- pum$PUM.DE.Close
+head(pum)
+
+fashion_stocks <- merge(kering,cpri,rms,mc,cfr,ads,nke,pum)
+head(fashion_stocks)
+sum(is.na(fashion_stocks))
 
 # food companies
 
@@ -44,7 +60,6 @@ head(danone)
 bonduelle <- getSymbols("BON.PA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 bonduelle <- bonduelle$BON.PA.Close
 head(bonduelle)
-
 
 pepsi <- getSymbols("PEP", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 pepsi <- pepsi$PEP.Close
@@ -65,9 +80,6 @@ head(kraft_heinz)
 
 food_stoks <- merge(nestle,unilever,danone,bonduelle,pepsi,mcdonalds,kelloggs,kraft_heinz)
 food_stoks <- data.frame(food_stoks)
-typeof(food_stoks)
-food_stoks$BON.PA.Close
-is.data.frame(food_stoks)
 head(food_stoks)
 sum(is.na(food_stoks))
 
@@ -76,7 +88,6 @@ sum(is.na(food_stoks))
 trivago <- (getSymbols("TRVG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE))
 trivago <- trivago$TRVG.Close
 head(trivago)
-typeof(trivago)
 
 booking <- getSymbols("BKNG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 booking <- booking$BKNG.Close
@@ -85,7 +96,6 @@ head(booking)
 ryanair <- getSymbols("RYA.IR", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 ryanair <- ryanair$RYA.IR.Close
 head(ryanair)
-
 
 lyft <- getSymbols("LYFT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 lyft <- lyft$LYFT.Close
@@ -108,7 +118,6 @@ uber <- getSymbols("UBER", src = "yahoo", from="2020-01-01", to = "2022-12-31", 
 uber <- uber$UBER.Close
 head(uber)
 
-typeof(hilton)
 travel_stocks <- merge(trivago,booking,ryanair,lyft,trip.com,tripadvisor,hilton,uber)
 travel_stocks <- data.frame(travel_stocks)
 is.data.frame(travel_stocks)
@@ -121,26 +130,11 @@ head(trivago)
 sum(is.na(trivago))
 sum(is.na(travel_stocks$TRVG.Close))
 
-is.na(travel_stocks$TRVG.Close)
-
-travel_stocks$TRVG.Close
-
-trivago[14,]
-travel_stocks$TRVG.Close[14,]
 
 which(is.na(travel_stocks$TRVG.Close))
 travel_stocks[which(is.na(travel_stocks$TRVG.Close)),]
 trivago[which(is.na(trivago[,'TRVG.Close'])),]
-trivago
 
-df <- data.frame(travel_stocks[which(is.na(travel_stocks$TRVG.Close)),], trivago[which(is.na(travel_stocks$TRVG.Close)),])
-
-head(travel_stocks,100)
-
-typeof(travel_stocks)
-
-travel_stocks$trivago
-travel_stocks[,'trivago']
 head(travel_stocks)
 sum(is.na(travel_stocks))
 
@@ -169,7 +163,23 @@ orsted <- getSymbols("ORSTED.CO", src = "yahoo", from="2020-01-01", to = "2022-1
 orsted <- orsted$ORSTED.CO.Close
 head(orsted)
 
+chevron <- getSymbols("CHV.F", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+chevron <- chevron$CHV.F.Close
+head(chevron)
 
+repsol <- getSymbols("REP.MC", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+repsol <- repsol$REP.MC.Close
+head(repsol)
+
+
+total_energies <- getSymbols("TTE.PA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+total_energies <- total_energies$TTE.PA.Close
+head(total_energies)
+
+
+oil_stocks <- merge(shell,eni,enel,engie,orsted,chevron,repsol,total_energies)
+head(oil_stocks)
+sum(is.na(oil_stocks))
 
 # logistic
 
@@ -211,7 +221,7 @@ head(sf_express)
  
 logistics_stocks <- merge(zalando,ups,amazon,dhl,fedex,maersk,walmart,sf_express)
 head(logistics_stocks)
-
+sum(is.na(logistics_stocks))
 
 
 # technology
@@ -256,6 +266,9 @@ google <- google$GOOG.Close
 head(google)
 
 
+it_stocks <- merge(spotify,netflix,nvidia,meta,apple,samsung,microsoft,google)
+head(it_stocks)
+sum(is.na(it_stocks))
 
 # automobile companies
 
@@ -296,10 +309,11 @@ toyota <- getSymbols("TM", src = "yahoo", from = "2020-01-01", to = "2022-12-31"
 toyota <- toyota$TM.Close
 head(toyota)
 
-Automobile <- merge(volkswagen,ferrari,stellantis,renault,mercedes,BMW,tesla,toyota)
-Automobile
+automobile_stocks <- merge(volkswagen,ferrari,stellantis,renault,mercedes,BMW,tesla,toyota)
+head(automobile_stocks)
+sum(is.na(automobile_stocks))
 
-#Healthcare companys
+# healthcare companys
 
 Sanofi <- getSymbols("SAN.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 Sanofi <- Sanofi$SAN.PA.Close
@@ -341,7 +355,7 @@ GSK <- GSK$GSK.L.Close
 head(GSK)
 
 
-Healthcare <- merge(Sanofi,Novartis,Bayer,AstraZeneca,UCB_SA,Merck_KGaA,argenx,GSK)
-Healthcare
-
+healthcare_stocks <- merge(Sanofi,Novartis,Bayer,AstraZeneca,UCB_SA,Merck_KGaA,argenx,GSK)
+healthcare_stocks
+sum(is.na(healthcare_stocks))
 
