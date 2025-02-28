@@ -1,61 +1,3 @@
-<<<<<<< HEAD
-library(quantmod)  
-
-# Download packages
-install.packages("tidyquant")  
-install.packages("quantmod")    
-install.packages("ggplot2")
-install.packages("BatchGetSymbols")
-library("tidyquant")
-library(tidyr)
-library(dplyr)
-#Oil&Fashion industry
-Fashion  <- c("KER.PA", "CPRI", "RMS.PA", "MC.PA", "CFR.SW", "ADS.DE", "NKE.DE", "PUM.DE") 
-
-fashion_data <- tq_get(Fashion, from = "2020-01-01", to = "2022-12-31")
-
-close_fashion <- fashion_data[,c("date", "symbol", "close")]
-
-oil <- c("CHV.F", "REP.MC","TTE.PA")
-
-oil_data <- tq_get(oil, from = "2020-01-01", to = "2022-12-31")
-close_oil <- oil_data[, c("date", "symbol", "close")]
-
-data <- data.frame(date = unique(oil_data$date))
-#Merge with column for oil data
-for (i in oil){
-    as_column <- close_oil[close_oil$symbol == i, ]
-    reshaped_data <- as_column %>%
-     pivot_wider(names_from = symbol, values_from = close)
-    data <- merge(data, reshaped_data, by = "date", all.x = TRUE)
-
-}
-
-#Merge with column for fashion data
-for (i in Fashion){
-    as_column <- close_fashion[close_fashion$symbol == i, ]
-    reshaped_data <- as_column %>%
-     pivot_wider(names_from = symbol, values_from = close)
-    data <- merge(data, reshaped_data, by = "date", all.x = TRUE)
-
-}
-close_fashion
-final_data <- data
-
-head(final_data)
-
-
-
-
-
-
-
-
-t(close_oil)
-=======
-=======
-library(tidyquant)
->>>>>>> 85c05c7b234bcc7ce0a7eee8df2d227ea009a2ce
 library(quantmod)
 library(tidyquant)
 library(tidyverse)
@@ -120,6 +62,9 @@ fashion_stocks <- as.data.frame(lapply(fashion_stocks, fill_na_with_moving_avg))
 nrow(fashion_stocks) # 776
 sum(is.na(fashion_stocks))
 
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/fashion_stocks.csv"
+write.csv(fashion_stocks, file_path, row.names = FALSE)
+
 # food companies
 
 nestle <- getSymbols("NESN.SW", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -164,6 +109,10 @@ sum(is.na(food_stoks))
 food_stoks <- as.data.frame(lapply(food_stoks, fill_na_with_moving_avg))
 nrow(food_stoks) # 776
 sum(is.na(food_stoks))
+
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/food_stoks.csv"
+write.csv(food_stoks, file_path, row.names = FALSE)
+
 
 # travel 
 
@@ -225,6 +174,9 @@ travel_stocks <- as.data.frame(lapply(travel_stocks, fill_na_with_moving_avg))
 nrow(travel_stocks) # 776
 sum(is.na(travel_stocks))
 
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/travel_stocks.csv"
+write.csv(travel_stocks, file_path, row.names = FALSE)
+
 # oil and gas
 
 shell <- getSymbols("SHEL", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -273,6 +225,9 @@ oil_stocks <- as.data.frame(lapply(oil_stocks, fill_na_with_moving_avg))
 nrow(oil_stocks) # 776
 sum(is.na(oil_stocks))
 
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/oil_stocks.csv"
+write.csv(oil_stocks, file_path, row.names = FALSE)
+
 # logistic
 
 zalando <- getSymbols("ZAL.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -319,6 +274,9 @@ sum(is.na(logistics_stocks))
 logistics_stocks <- as.data.frame(lapply(logistics_stocks, fill_na_with_moving_avg))
 nrow(logistics_stocks) # 781
 sum(is.na(logistics_stocks))
+
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/logistics_stocks.csv"
+write.csv(logistics_stocks, file_path, row.names = FALSE)
 
 
 # technology
@@ -372,6 +330,10 @@ it_stocks <- as.data.frame(lapply(it_stocks, fill_na_with_moving_avg))
 nrow(it_stocks) # 780
 sum(is.na(it_stocks))
 
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/it_stocks.csv"
+write.csv(it_stocks, file_path, row.names = FALSE)
+
+
 # automobile companies
 
 volkswagen <- getSymbols("VOW3.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -419,6 +381,10 @@ sum(is.na(automobile_stocks))
 automobile_stocks <- as.data.frame(lapply(automobile_stocks, fill_na_with_moving_avg))
 nrow(automobile_stocks) # 776
 sum(is.na(automobile_stocks))
+
+
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/automobile_stocks.csv"
+write.csv(automobile_stocks, file_path, row.names = FALSE)
 
 # healthcare companys
 
@@ -470,3 +436,7 @@ sum(is.na(healthcare_stocks))
 healthcare_stocks <- as.data.frame(lapply(healthcare_stocks, fill_na_with_moving_avg))
 nrow(healthcare_stocks) # 776
 sum(is.na(healthcare_stocks))
+
+
+file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/healthcare_stocks.csv"
+write.csv(healthcare_stocks, file_path, row.names = FALSE)
