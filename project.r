@@ -1,6 +1,7 @@
 library(quantmod)
 library(tidyverse)
 library(dplyr)
+library(zoo)
 
 # food companies
 
@@ -8,8 +9,8 @@ nestle <- getSymbols("NESN.SW", src = "yahoo", from = "2020-01-01", to = "2022-1
 nestle <- nestle$NESN.SW.Close
 head(nestle)
 
-unilever <- getSymbols("HINDUNILVR.NS", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-unilever <- unilever$HINDUNILVR.NS.Close
+unilever <- getSymbols("UL", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+unilever <- unilever$UL.Close
 head(unilever)
 
 danone <- getSymbols("BN.PA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -19,6 +20,25 @@ head(danone)
 bonduelle <- getSymbols("BON.PA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 bonduelle <- bonduelle$BON.PA.Close
 head(bonduelle)
+
+
+pepsi <- getSymbols("PEP", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+pepsi <- pepsi$PEP.Close
+head(pepsi)
+
+mcdonalds <- getSymbols("MCD", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+mcdonalds <- mcdonalds$MCD.Close
+head(mcdonalds)
+
+kelloggs <- getSymbols("K", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+kelloggs <- kelloggs$K.Close
+head(kelloggs)
+
+
+kraft_heinz <- getSymbols("KHC", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+kraft_heinz <- kraft_heinz$KHC.Close
+head(kraft_heinz)
+
 
 
 # travel 
@@ -88,6 +108,33 @@ amazon <- getSymbols("AMZN", src = "yahoo", from="2020-01-01", to = "2022-12-31"
 amazon <- amazon$AMZN.Close
 head(amazon)
 
+dhl <- getSymbols("DHL.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+dhl <- dhl$DHL.DE.Close
+sum(is.na(dhl))
+dhl[] <- lapply(dhl, function(col) na.fill(col, "extend"))
+sum(is.na(dhl))
+head(dhl)
+
+
+fedex <- getSymbols("FDX", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+fedex <- fedex$FDX.Close
+head(fedex)
+ 
+
+maersk <- getSymbols("AMKBY", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+maersk <- maersk$AMKBY.Close
+head(maersk)
+
+maersk <- getSymbols("AMKBY", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+maersk <- maersk$AMKBY.Close
+head(maersk)
+
+
+walmart <- getSymbols("WMT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+walmart <- walmart$WMT.Close
+head(walmart)
+
+ 
 
 # technology
 
@@ -96,21 +143,43 @@ spotify <- spotify$SPOT.Close
 head(spotify)
 
 
-siemens <- getSymbols("SIE.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-siemens <- siemens$SIE.DE.Close
-head(siemens)
+netflix <- getSymbols("NFLX", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+netflix <- netflix$NFLX.Close
+head(netflix)
 
 
-airbus <- getSymbols("AIR.PA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-airbus <- airbus$AIR.PA.Close
-head(airbus)
+nvidia <- getSymbols("NVDA", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+nvidia <- nvidia$NVDA.Close
+head(nvidia)
 
 
-leonardo <- getSymbols("LDO.MI", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-leonardo <- leonardo$LDO.MI.Close
-head(leonardo)
+meta <- getSymbols("META", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+meta <- meta$META.Close
+head(meta)
 
-# Automobile companies
+
+
+apple <- getSymbols("AAPL", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+apple <- apple$AAPL.Close
+head(apple)
+
+
+samsung <- getSymbols("005930.KS", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+samsung <- samsung$`005930.KS.Close`
+head(samsung)
+
+
+microsoft <- getSymbols("MSFT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+microsoft <- microsoft$MSFT.Close
+head(microsoft)
+
+google <- getSymbols("GOOG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+google <- google$GOOG.Close
+head(google)
+
+
+
+# automobile companies
 
 Volkswagen <- getSymbols("VOW3.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 Volkswagen <- Volkswagen$VOW3.DE.Close
@@ -140,5 +209,14 @@ BMW <- getSymbols("BMW.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31
 BMW <- BMW$BMW.DE.Close
 head(BMW)
 
+
+tesla <- getSymbols("TSLA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+tesla <- tesla$TSLA.Close
+head(tesla)
+
+
+toyota <- getSymbols("TM", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+toyota <- toyota$TM.Close
+head(toyota)
 
 
