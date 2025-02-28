@@ -275,4 +275,52 @@ toyota <- getSymbols("TM", src = "yahoo", from = "2020-01-01", to = "2022-12-31"
 toyota <- toyota$TM.Close
 head(toyota)
 
+Automobile <- merge(volkswagen,ferrari,stellantis,renault,mercedes,BMW,tesla,toyota)
+Automobile
+
+#Healthcare companys
+
+Sanofi <- getSymbols("SAN.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Sanofi <- Sanofi$SAN.PA.Close
+head(Sanofi)
+
+
+Novartis <- getSymbols("NOVN.SW", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Novartis <- Novartis$NOVN.SW.Close
+head(Novartis)
+
+
+Bayer <- getSymbols("BAYN.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Bayer <- Bayer$BAYN.DE.Close
+head(Bayer)
+
+
+AstraZeneca <- getSymbols("AZN", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+AstraZeneca <- AstraZeneca$AZN.Close
+head(AstraZeneca)
+
+
+UCB_SA <- getSymbols("UCB.BR", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+UCB_SA <- UCB_SA$UCB.BR.Close
+head(UCB_SA)
+
+
+Merck_KGaA <- getSymbols("MRK.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+Merck_KGaA <- Merck_KGaA$MRK.DE.Close
+head(Merck_KGaA)
+
+
+argenx <- getSymbols("ARGX", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+argenx <- argenx$ARGX.Close
+head(argenx)
+
+
+GSK <- getSymbols("GSK.L", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+GSK <- GSK$GSK.L.Close
+head(GSK)
+
+
+Healthcare <- merge(Sanofi,Novartis,Bayer,AstraZeneca,UCB_SA,Merck_KGaA,argenx,GSK)
+Healthcare
+
 
