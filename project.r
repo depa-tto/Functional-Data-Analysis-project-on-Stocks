@@ -1,27 +1,31 @@
-library(quantmod)  
-
-# Download packages
-install.packages("tidyquant")  
-install.packages("quantmod")    
+install.packages("tidyquant")
+install.packages("quantmod")
 install.packages("ggplot2")
 install.packages("BatchGetSymbols")
 library("tidyquant")
+library(quantmod)
+library(tidyquant)
+library(tidyverse)
+library(dplyr)
+library(zoo)
+
+
 #Car&Fashion industry
+
 Fashion  <- c("KER.PA", "CPRI", "RMS.PA", "MC.PA", "CFR.SW", "ADS.DE", "NKE.DE", "PUM.DE") 
 
 fashion_data <- tq_get(Fashion, from = "2020-01-01", to = "2022-12-31")
 
 close_fashion <- fashion_data[,c("date", "symbol", "close")]
 
+close_fashion
+
 oil <- c("CHV.F", "REP.MC","TTE.PA")
 
 oil_data <- tq_get(oil, from = "2020-01-01", to = "2022-12-31")
 close_oil <- oil_data[, c("date", "symbol", "close")]
-=======
-library(quantmod)
-library(tidyverse)
-library(dplyr)
-library(zoo)
+
+head(close_oil)
 
 # food companies
 
@@ -59,13 +63,16 @@ kraft_heinz <- getSymbols("KHC", src = "yahoo", from="2020-01-01", to = "2022-12
 kraft_heinz <- kraft_heinz$KHC.Close
 head(kraft_heinz)
 
-
+food_stoks <- merge(nestle,unilever,danone,bonduelle,pepsi,mcdonalds,kelloggs,kraft_heinz)
+head(food_stoks)
+sum(is.na(food_stoks))
 
 # travel 
 
-trivago <- getSymbols("TRVG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+trivago <- (getSymbols("TRVG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE))
 trivago <- trivago$TRVG.Close
 head(trivago)
+typeof(trivago)
 
 booking <- getSymbols("BKNG", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 booking <- booking$BKNG.Close
@@ -75,18 +82,46 @@ ryanair <- getSymbols("RYA.IR", src = "yahoo", from="2020-01-01", to = "2022-12-
 ryanair <- ryanair$RYA.IR.Close
 head(ryanair)
 
-ryanair <- getSymbols("RYA.IR", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-ryanair <- ryanair$RYA.IR.Close
-head(ryanair)
 
-
-airbnb <- getSymbols("ABNB", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-airbnb <- airbnb$ABNB.Close
-head(airbnb)
+lyft <- getSymbols("LYFT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+lyft <- lyft$LYFT.Close
+head(lyft)
 
 trip.com <- getSymbols("TCOM", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 trip.com <- trip.com$TCOM.Close
 head(trip.com)
+
+tripadvisor <- getSymbols("TRIP", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+tripadvisor <- tripadvisor$TRIP.Close
+head(tripadvisor)
+
+hilton <- getSymbols("HLT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+hilton <- hilton$HLT.Close
+head(hilton)
+
+
+uber <- getSymbols("UBER", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+uber <- uber$UBER.Close
+head(uber)
+
+typeof(hilton)
+travel_stocks <- merge(trivago,booking,ryanair,lyft,trip.com,tripadvisor,hilton,uber)
+
+
+
+travel_stocks <- as.data.frame(travel_stocks)
+nrow(trivago)
+nrow(travel_stocks)
+head(trivago)
+sum(is.na(trivago))
+sum(is.na(travel_stocks$trivago))
+
+typeof(travel_stocks)
+
+travel_stocks$trivago
+travel_stocks[,'trivago']
+head(travel_stocks)
+sum(is.na(travel_stocks))
 
 # oil and gas
 
@@ -114,6 +149,7 @@ orsted <- orsted$ORSTED.CO.Close
 head(orsted)
 
 
+
 # logistic
 
 zalando <- getSymbols("ZAL.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -130,9 +166,6 @@ head(amazon)
 
 dhl <- getSymbols("DHL.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 dhl <- dhl$DHL.DE.Close
-sum(is.na(dhl))
-dhl[] <- lapply(dhl, function(col) na.fill(col, "extend"))
-sum(is.na(dhl))
 head(dhl)
 
 
@@ -145,16 +178,20 @@ maersk <- getSymbols("AMKBY", src = "yahoo", from="2020-01-01", to = "2022-12-31
 maersk <- maersk$AMKBY.Close
 head(maersk)
 
-maersk <- getSymbols("AMKBY", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-maersk <- maersk$AMKBY.Close
-head(maersk)
-
 
 walmart <- getSymbols("WMT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 walmart <- walmart$WMT.Close
 head(walmart)
 
+sf_express <- getSymbols("002352.SZ", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+sf_express <- sf_express$`002352.SZ.Close`
+head(sf_express)
+
  
+logistics_stocks <- merge(zalando,ups,amazon,dhl,fedex,maersk,walmart,sf_express)
+head(logistics_stocks)
+
+
 
 # technology
 
