@@ -1,4 +1,61 @@
+<<<<<<< HEAD
+library(quantmod)  
+
+# Download packages
+install.packages("tidyquant")  
+install.packages("quantmod")    
+install.packages("ggplot2")
+install.packages("BatchGetSymbols")
+library("tidyquant")
+library(tidyr)
+library(dplyr)
+#Oil&Fashion industry
+Fashion  <- c("KER.PA", "CPRI", "RMS.PA", "MC.PA", "CFR.SW", "ADS.DE", "NKE.DE", "PUM.DE") 
+
+fashion_data <- tq_get(Fashion, from = "2020-01-01", to = "2022-12-31")
+
+close_fashion <- fashion_data[,c("date", "symbol", "close")]
+
+oil <- c("CHV.F", "REP.MC","TTE.PA")
+
+oil_data <- tq_get(oil, from = "2020-01-01", to = "2022-12-31")
+close_oil <- oil_data[, c("date", "symbol", "close")]
+
+data <- data.frame(date = unique(oil_data$date))
+#Merge with column for oil data
+for (i in oil){
+    as_column <- close_oil[close_oil$symbol == i, ]
+    reshaped_data <- as_column %>%
+     pivot_wider(names_from = symbol, values_from = close)
+    data <- merge(data, reshaped_data, by = "date", all.x = TRUE)
+
+}
+
+#Merge with column for fashion data
+for (i in Fashion){
+    as_column <- close_fashion[close_fashion$symbol == i, ]
+    reshaped_data <- as_column %>%
+     pivot_wider(names_from = symbol, values_from = close)
+    data <- merge(data, reshaped_data, by = "date", all.x = TRUE)
+
+}
+close_fashion
+final_data <- data
+
+head(final_data)
+
+
+
+
+
+
+
+
+t(close_oil)
+=======
+=======
 library(tidyquant)
+>>>>>>> 85c05c7b234bcc7ce0a7eee8df2d227ea009a2ce
 library(quantmod)
 library(tidyquant)
 library(tidyverse)
