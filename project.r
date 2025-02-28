@@ -5,6 +5,21 @@ library(tidyverse)
 library(dplyr)
 library(zoo)
 
+# REMOVING MISSING VALUES FUNCTION
+
+fill_na_with_moving_avg <- function(x, window = 10) {
+  na_indices <- which(is.na(x))  
+  for (i in na_indices) {
+    left <- max(1, i - window)   
+    right <- min(length(x), i + window)  
+    surrounding_values <- x[left:right]  
+    if (sum(!is.na(surrounding_values)) > 0) {  
+      x[i] <- mean(surrounding_values, na.rm = TRUE)  
+    }
+  }
+  return(x)
+}
+
 # fashion companies
 
 kering <- getSymbols("KER.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -41,6 +56,11 @@ head(pum)
 
 fashion_stocks <- merge(kering,cpri,rms,mc,cfr,ads,nke,pum)
 head(fashion_stocks)
+sum(is.na(fashion_stocks))
+
+
+fashion_stocks <- as.data.frame(lapply(fashion_stocks, fill_na_with_moving_avg))
+nrow(fashion_stocks) # 776
 sum(is.na(fashion_stocks))
 
 # food companies
@@ -81,6 +101,11 @@ head(kraft_heinz)
 food_stoks <- merge(nestle,unilever,danone,bonduelle,pepsi,mcdonalds,kelloggs,kraft_heinz)
 food_stoks <- data.frame(food_stoks)
 head(food_stoks)
+sum(is.na(food_stoks))
+
+
+food_stoks <- as.data.frame(lapply(food_stoks, fill_na_with_moving_avg))
+nrow(food_stoks) # 776
 sum(is.na(food_stoks))
 
 # travel 
@@ -138,6 +163,11 @@ trivago[which(is.na(trivago[,'TRVG.Close'])),]
 head(travel_stocks)
 sum(is.na(travel_stocks))
 
+
+travel_stocks <- as.data.frame(lapply(travel_stocks, fill_na_with_moving_avg))
+nrow(travel_stocks) # 776
+sum(is.na(travel_stocks))
+
 # oil and gas
 
 shell <- getSymbols("SHEL", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -181,6 +211,11 @@ oil_stocks <- merge(shell,eni,enel,engie,orsted,chevron,repsol,total_energies)
 head(oil_stocks)
 sum(is.na(oil_stocks))
 
+
+oil_stocks <- as.data.frame(lapply(oil_stocks, fill_na_with_moving_avg))
+nrow(oil_stocks) # 776
+sum(is.na(oil_stocks))
+
 # logistic
 
 zalando <- getSymbols("ZAL.DE", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -221,6 +256,11 @@ head(sf_express)
  
 logistics_stocks <- merge(zalando,ups,amazon,dhl,fedex,maersk,walmart,sf_express)
 head(logistics_stocks)
+sum(is.na(logistics_stocks))
+
+
+logistics_stocks <- as.data.frame(lapply(logistics_stocks, fill_na_with_moving_avg))
+nrow(logistics_stocks) # 781
 sum(is.na(logistics_stocks))
 
 
@@ -270,6 +310,11 @@ it_stocks <- merge(spotify,netflix,nvidia,meta,apple,samsung,microsoft,google)
 head(it_stocks)
 sum(is.na(it_stocks))
 
+
+it_stocks <- as.data.frame(lapply(it_stocks, fill_na_with_moving_avg))
+nrow(it_stocks) # 780
+sum(is.na(it_stocks))
+
 # automobile companies
 
 volkswagen <- getSymbols("VOW3.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -311,6 +356,11 @@ head(toyota)
 
 automobile_stocks <- merge(volkswagen,ferrari,stellantis,renault,mercedes,BMW,tesla,toyota)
 head(automobile_stocks)
+sum(is.na(automobile_stocks))
+
+
+automobile_stocks <- as.data.frame(lapply(automobile_stocks, fill_na_with_moving_avg))
+nrow(automobile_stocks) # 776
 sum(is.na(automobile_stocks))
 
 # healthcare companys
@@ -359,3 +409,7 @@ healthcare_stocks <- merge(Sanofi,Novartis,Bayer,AstraZeneca,UCB_SA,Merck_KGaA,a
 healthcare_stocks
 sum(is.na(healthcare_stocks))
 
+
+healthcare_stocks <- as.data.frame(lapply(healthcare_stocks, fill_na_with_moving_avg))
+nrow(healthcare_stocks) # 776
+sum(is.na(healthcare_stocks))
