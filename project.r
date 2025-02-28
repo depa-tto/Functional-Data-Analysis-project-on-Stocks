@@ -181,29 +181,28 @@ head(google)
 
 # automobile companies
 
-Volkswagen <- getSymbols("VOW3.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-Volkswagen <- Volkswagen$VOW3.DE.Close
-head(Volkswagen)
+volkswagen <- getSymbols("VOW3.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+volkswagen <- volkswagen$VOW3.DE.Close
+head(volkswagen)
 
 
-Ferrari <- getSymbols("RACE.MI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-Ferrari <- Ferrari$RACE.MI.Close
-head(Ferrari)
+ferrari <- getSymbols("RACE.MI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+ferrari <- ferrari$RACE.MI.Close
+head(ferrari)
 
-Stellantis <- getSymbols("STLAM.MI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-Stellantis <- Stellantis$STLAM.MI.Close
-head(Stellantis)
-
-
-
-Renault <- getSymbols("RNO.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-Renault <- Renault$RNO.PA.Close
-head(Renault)
+stellantis <- getSymbols("STLAM.MI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+stellantis <- stellantis$STLAM.MI.Close
+head(stellantis)
 
 
-Mercedes_Benz_Group <- getSymbols("MBG.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-Mercedes_Benz_Group <- Mercedes_Benz_Group$MBG.DE.Close
-head(Mercedes_Benz_Group)
+renault <- getSymbols("RNO.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+renault <- renault$RNO.PA.Close
+head(renault)
+
+
+mercedes <- getSymbols("MBG.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+mercedes <- mercedes$MBG.DE.Close
+head(mercedes)
 
 BMW <- getSymbols("BMW.DE", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 BMW <- BMW$BMW.DE.Close
