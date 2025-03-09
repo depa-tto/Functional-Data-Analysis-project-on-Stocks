@@ -3,6 +3,8 @@ library(tidyquant)
 library(tidyverse)
 library(dplyr)
 library(zoo)
+install.packages("httr")
+library(httr)
 
 # REMOVING MISSING VALUES FUNCTION
 
@@ -440,3 +442,98 @@ sum(is.na(healthcare_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/healthcare_stocks.csv"
 write.csv(healthcare_stocks, file_path, row.names = FALSE)
+library(ggplot2)
+
+
+#Your file_path
+path <- getwd()
+setwd(file.path(getwd(), "data_stocks"))
+
+#Read CSV
+it <- read.csv("it_stocks.csv")
+automobile <- read.csv("automobile_stocks.csv")
+fashion<- read.csv("fashion_stocks.csv")
+healthcare<- read.csv("healthcare_stocks.csv")
+food <- read.csv("food_stoks.csv")
+oil<- read.csv("oil_stocks.csv")
+travel <- read.csv("travel_stocks.csv")
+logistics <- read.csv("logistics_stocks.csv")
+
+#Exclude rows for stocks higher than 776
+logistics <-logistics[1:776,]
+it <- it[1:776,]
+automobile <- automobile[1:776,]
+fashion <- fashion[1:776,]
+healthcare <- healthcare[1:776,]
+food <- food[1:776,]
+oil <- oil[1:776,]
+travel <- oil[1:776,]
+#Merge all stocks
+st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
+#Save the final file
+write.csv(df, file = "final_data.csv", row.names = FALSE)
+st <- read.csv("final_data.csv")
+which(colnames(st) == "X005930.KS.Close")
+#Exclud the stock 
+st <- st[,-14]
+
+#Visualize stocks for IT
+opar <- par(mfrow=c(2,2))
+plot(st$day, df$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
+     main="SPOT Close Prices")
+plot(st$day, df$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
+     main="NFLX Close Prices")
+plot(st$day, df$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
+     main="NVDA Close Prices")
+plot(st$day, df$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
+     main="META Close Prices")
+dev.off()
+
+
+#B-splines with penalty
+library(fda)
+
+st <- as.matrix(st)
+day <- c(1:776)
+basis <- create.bspline.basis(c(1,776),nbasis= 300, norder = 5)
+#Second derivative
+D2lfd = int2Lfd(2)
+D2fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=1e4)
+
+gcv = rep(0,20)
+df = rep(0,20)
+sse = rep(0,20)
+
+lambda_seq = 10^{seq(-7, 3, length.out = 20)}
+for(i in 1:20){
+  lambda=lambda_seq[i]
+  tD2fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=lambda)
+  
+  smooth = smooth.basis(day, st, tD2fdPar)
+  
+  gcv[i] = sum(smooth$gcv)
+  df[i] = smooth$df
+  sse[i] = smooth$SSE
+}
+
+
+#Plot SSE, Df and GCV with assigned lamda
+par(mfrow = c(3,1))
+plot(-17:2,df[1:20],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
+plot(-17:2,sse[1:20],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
+plot(-17:2,gcv[1:20],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
+dev.off()
+
+#Choose minimum GCV
+optimal_lambda_index = which.min(gcv)
+optimal_lambda = lambda_seq[optimal_lambda_index]
+optimal_df = df[optimal_lambda_index]
+optimal_sse = sse[optimal_lambda_index]
+
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=optimal_lambda)
+smooth <- smooth.basis(day,st,tD3fdPar)
+smooth$SSE
+plotfit.fd(st,day,smooth$fd)
+
+
+#Kernel smoothing
