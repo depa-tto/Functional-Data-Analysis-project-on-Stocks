@@ -617,6 +617,24 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
 plot(smooth)
 
+
+# EDA and outliers detection for b-spline
+smooth.fd = smooth$fd
+
+plot(smooth.fd)
+
+b_spline_mean = mean.fd(smooth.fd)
+b_spline_sd = std.fd(smooth.fd)
+
+lines(b_spline_mean, lwd=4, lty=2, col=2)
+lines(b_spline_sd, lwd=4, lty=2, col=4)
+
+lines(b_spline_mean-b_spline_sd, lwd=4, lty=2, col=6)
+lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
+
+lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
+lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+
 ### Kernel smoothing
 out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
 out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
@@ -682,24 +700,24 @@ plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ",
 
 ### Selected smoothing ###
 
-out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
 
-str(out4)
-names(out4)
+str(out3)
+names(out3)
 
-plot(out4$h, out4$gcv, type = "b", pch = 19, col = "blue",
+plot(out3$h, out3$gcv, type = "b", pch = 19, col = "blue",
      xlab = "Smoothing Parameter (h)", ylab = "GCV",
      main = "Generalized Cross Validation Curve")
-abline(v = out4$h.opt, col = "red", lty = 2) 
+abline(v = out3$h.opt, col = "red", lty = 2) 
 grid()
 
 
-plot(out4$fdata.est, main = "Smoothed Functional Data") # smoothed functions
+plot(out3$fdata.est, main = "Smoothed Functional Data") # smoothed functions
 
+mean_kernel <- plot(mean(out3$fdata.est))
 
-plot(mean(out4$fdata.est))
-plot(sd(out4$fdata.est))
-
+plot(out3$fdata.est, main = "Smoothed Functional Data")
+lines(mean_kernel,lwd=4, lty=2, col=2)
 
 # EDA and outliers detection
 # elementary pointwise mean and standard deviation
@@ -725,19 +743,3 @@ lines(triweight_mean+2*triweight_sd, lwd=4, lty=2, col=8)
 
 
 
-
-# The Bivariate Covariance Function v(s; t)
-
-triweight.bifd = var.fd(triweight.fd)
-
-weektime        = seq(0,365,length=53)
-logprecvar_mat  = eval.bifd(weektime, weektime,
-                            triweight.bifd)
-
-
-persp(weektime, weektime, logprecvar_mat,
-      theta=-45, phi=25, r=3, expand = 0.5,
-      ticktype='detailed',
-      xlab="Day",
-      ylab="Day",
-      zlab="variance(log10 precip)")
