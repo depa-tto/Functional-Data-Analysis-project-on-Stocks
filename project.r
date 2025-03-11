@@ -459,15 +459,15 @@ oil<- read.csv("oil_stocks.csv")
 travel <- read.csv("travel_stocks.csv")
 logistics <- read.csv("logistics_stocks.csv")
 
-# exclude rows for stocks higher than 776
-logistics <-logistics[1:776,]
-it <- it[1:776,]
-automobile <- automobile[1:776,]
-fashion <- fashion[1:776,]
-healthcare <- healthcare[1:776,]
-food <- food[1:776,]
-oil <- oil[1:776,]
-travel <- oil[1:776,]
+# exclude rows for stocks higher than 756
+logistics <-logistics[1:756,]
+it <- it[1:756,]
+automobile <- automobile[1:756,]
+fashion <- fashion[1:756,]
+healthcare <- healthcare[1:756,]
+food <- food[1:756,]
+oil <- oil[1:756,]
+travel <- oil[1:756,]
 # merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
 # save the final file
@@ -485,9 +485,8 @@ library(httr)
 path <- getwd()
 setwd(file.path(getwd(), "data_stocks"))
 st <- read.csv("final_data.csv")
-which(colnames(st) == "X005930.KS.Close") # samsung
-# Exclude the stock 
-st <- st[,-14]
+head(st)
+sum(is.na(st))
 
 # Visualize stocks for IT
 opar <- par(mfrow=c(2,2))
@@ -501,15 +500,14 @@ plot(st$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close",
      main="META Close Prices")
 
 opar <- par(mfrow=c(2,2))
-plot(st$AAPL.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
-     main="SPOT Close Prices")
-plot(st$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
-     main="NFLX Close Prices")
-plot(st$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
-     main="NVDA Close Prices")
-plot(st$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
-     main="META Close Prices")
-dev.off()
+plot(st$AAPL.Close, type="l", col="blue", lwd=2, xlab="", ylab="APPL Close", 
+     main="APPL Close Prices")
+plot(st$IBM.Close, type="l", col="red", lwd=2, xlab="", ylab="IBM Close", 
+     main="IBM Close Prices")
+plot(st$MSFT.Close, type="l", col="green", lwd=2, xlab="", ylab="MSFT Close", 
+     main="MSFT Close Prices")
+plot(st$GOOG.Close, type="l", col="purple", lwd=2, xlab="", ylab="GOOG Close", 
+     main="GOOG Close Prices")
 
 dev.off()
 
@@ -520,13 +518,18 @@ library(DepthProc)
 library(MultiRNG)
 
 st <- as.matrix(st)
+sum(is.na(st))
 
 # Euclidean depth
 
 dE <- depthEuclid(st, st)
 mdE <- which.max(dE)
-dE[mdE]
-st[mdE,] # deepest point
+dE[mdE] # euclidean depth of the deepest point in the dataset
+
+# a very small depth value (like this one) suggests that the dataset 
+# is highly spread out or has strong outliers, meaning even the "deepest" point is not very central.
+
+st[mdE,] # retrieves the most central (deepest) row from the dataset based on Euclidean Depth
 
 
 apply(st,2,median)
@@ -535,6 +538,8 @@ plot(st)
 points(st[mdE,1], st[mdE,2], pch=23, col="blue", bg="blue", lwd=2)
 points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
 # red one is median point while the blue one is the deepest point, affected by outliers
+# if the blue (deepest) and red (median) points are close, the dataset is relatively symmetric and balanced.
+# if they are far apart, the dataset might have outliers or skewed distribution (the Euclidean Depth is influenced by the overall spread of the data)
 
 
 # Local depth
@@ -544,7 +549,7 @@ mdL <- which.max(dL)
 dL[mdL]
 st[mdL,]
 
-depthContour(st, depth_params = list(method = "Local", depth_params1 = list(method = "LP"))) # 3D plot
+depthContour(st[,1:2], depth_params = list(method = "Local", depth_params1 = list(method = "LP")))
 
 # MBD, Frainman-Muniz
 dMBD <- fncDepth(st, method = "MBD")
@@ -558,7 +563,7 @@ st[mdMBD,]
 dFM[mdFM]
 st[mdFM,]
 
-plot(st, xlim=c(3,5), ylim=c(3,7))
+plot(st)
 points(st[mdMBD,1], st[mdMBD,2], pch=23, col="blue", bg="blue", lwd=2)
 points(st[mdFM,1], st[mdFM,2], pch=23, col="green", bg="green", lwd=2)
 points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
@@ -566,21 +571,19 @@ points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
 fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
 
-
 # B-splines with penalty
 library(fda)
-
-library("fda.usc")
+library(fda.usc)
 
 ### B-splines
 st <- as.matrix(st)
-day <- c(1:776)
+day <- c(1:756)
 
 nrow(st)
 # Create a grid for lambda and number of basis
 l <- c(0 ,2^seq(-9, 9, len = 40))
 nb <- seq(7, 40, by = 2)
-time_points <- 1:776
+time_points <- 1:756
 # Create functional ojects with argumen values
 fdata_obj <- fdata(t(st), argvals = time_points)
 
@@ -588,7 +591,10 @@ fdata_obj <- fdata(t(st), argvals = time_points)
 # Smooth with B-splines
 out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
 sum((fdata_obj$data - out0$fdata.est)^2)
-basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+basis <- create.bspline.basis(c(1,756),nbasis= out0$numbasis.opt, norder = 4)
+
+out0$fdata.est # the smoothed functional data
+out0$numbasis.opt # the optimal number of basis functions
 
 # Calculate SSE
 SSE <-sum((fdata_obj - out0$fdata.est )^2)
@@ -597,6 +603,7 @@ SSE <-sum((fdata_obj - out0$fdata.est )^2)
 gcv = rep(0,40)
 df = rep(0,40)
 sse = rep(0,40)
+
 # Iterate with different lambda for graph
 lambda_seq = c(0 ,2^seq(-9, 9, len = 40))
 for(i in 1:40){
@@ -646,6 +653,96 @@ lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
 
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+
+
+# the Bivariate Covariance Function v(s; t)
+
+logprecvar.bifd = var.fd(smooth.fd)
+
+print(range(logprecvar.bifd$argvals))
+
+weektime = seq(1,756,length=53)
+logprecvar_mat = eval.bifd(weektime, weektime,
+                            logprecvar.bifd)
+
+persp(weektime, weektime, logprecvar_mat,
+      theta=-45, phi=25, r=3, expand = 0.5,
+      ticktype='detailed',
+      xlab="Day",
+      ylab="Day",
+      zlab="variance(log10 precip)")
+
+
+contour(weektime, weektime, logprecvar_mat,
+        xlab="Day",
+        ylab="Day")
+
+
+day5time = seq(1,365,5)
+logprec.varmat = eval.bifd(day5time, day5time,
+                           logprecvar.bifd)
+contour(day5time, day5time, logprec.varmat,
+        xlab="Day",
+        ylab="Day", lwd=2,
+        labcex=1)
+
+
+### Descriptive measures for functional data.
+
+library(fda.usc)
+data(poblenou)
+nox <- poblenou$nox
+working <- poblenou$nox[poblenou$df$day.festive == 0 &
+                          as.integer(poblenou$df$day.week) < 6]
+nonworking <- poblenou$nox[poblenou$df$day.festive == 1 |
+                             as.integer(poblenou$df$day.week) > 5]
+
+# Centrality measures (working)
+
+par( mfrow=c(2, 2) )
+plot(func.mean(working), ylim = c(10, 170),
+     main = "Centrality measures in working days")
+legend(x = 11, y = 170, cex = 1, box.col = "white", lty = 1:5,
+       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
+                                "median.mode","median.RP"))
+lines(func.trim.mode(working, trim = 0.15), col = 2, lty = 2)
+lines(func.trim.RP(working, trim = 0.15), col = 3, lty = 3)
+lines(func.med.mode(working, trim = 0.15), col = 4, lty = 4)
+lines(func.med.RP(working, trim = 0.15), col = 5, lty = 5)
+
+# Centrality measures (non-working)
+plot(func.mean(nonworking), ylim = c(10,170),
+     main = "Centrality measures in non-working days")
+legend(x = 11, y = 170, cex = 1, box.col = "white",lty = 1:5,
+       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
+                                "median.mode","median.RP"))
+lines(func.trim.mode(nonworking, trim = 0.15),col = 2, lty = 2)
+lines(func.trim.RP(nonworking, trim = 0.15),col = 3, lty = 3)
+lines(func.med.mode(nonworking, trim = 0.15),col = 4, lty = 4)
+lines(func.med.RP(nonworking, trim = 0.15),col = 5, lty = 5)
+
+# Measures of dispersion   (working)
+plot(func.var(working),
+     main = "Dispersion measures in working days", ylim = c(100 ,5500))
+legend(x = 11, y = 5300,cex = 1, box.col = "white", lty = 1:3, col = 1:3,
+       legend = c("var", "trimvar.mode", "trimvar.RP"))
+lines(func.trimvar.mode(working,trim = 0.15), col = 2, lty = 2)
+lines(func.trimvar.RP(working,trim = 0.15), col = 3, lty = 3)
+
+# Measures of dispersion   (non-working)
+plot(func.var(nonworking),
+     main = "Dispersion measures in non-working days", ylim = c(100, 5500))
+legend(x = 11, y = 5300, cex = 1, box.col = "white", lty = 1:3, col = 1:3,
+       legend = c("var", "trimvar.mode", "trimvar.RP"))
+lines(func.trimvar.mode(nonworking, trim = 0.15), col = 2, lty = 2)
+lines(func.trimvar.RP(nonworking, trim = 0.15), col = 3, lty = 3)
+
+dev.off()
+
+### boxplot
+
+boxplot(smooth.fd)
+
 
 ### Kernel smoothing
 out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
@@ -729,29 +826,6 @@ plot(out3$fdata.est, main = "Smoothed Functional Data") # smoothed functions
 mean_kernel <- plot(mean(out3$fdata.est))
 
 plot(out3$fdata.est, main = "Smoothed Functional Data")
-lines(mean_kernel,lwd=4, lty=2, col=2)
-
-# EDA and outliers detection
-# elementary pointwise mean and standard deviation
-
-library(fda)
-triweight.fd <- fdata2fd(out4$fdata.est)  
-
-triweight.fd = out4$fd
-
-plot(triweight.fd)
-
-triweight_mean = mean.fd(triweight.fd)
-triweight_sd = std.fd(triweight.fd)
-
-lines(triweight_mean, lwd=4, lty=2, col=2)
-lines(triweight_sd, lwd=4, lty=2, col=4)
-
-lines(triweight_mean-triweight_sd, lwd=4, lty=2, col=6)
-lines(triweight_mean+triweight_sd, lwd=4, lty=2, col=6)
-
-lines(triweight_mean-2*triweight_sd, lwd=4, lty=2, col=8)
-lines(triweight_mean+2*triweight_sd, lwd=4, lty=2, col=8)
 
 
 
