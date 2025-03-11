@@ -639,6 +639,11 @@ st[1,]
 
 
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> parent of 7cf9c51 (Kernel updated)
 #Kernel smoothing
 
 out3 <- optim.np(st, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
@@ -667,6 +672,7 @@ lines(out6$h,out6$gcv, col = 8, lwd = 2)
 
 plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
      xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
+<<<<<<< HEAD
 
 
 # EDA and outliers detection
@@ -685,3 +691,5 @@ lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
 
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+=======
+>>>>>>> parent of 7cf9c51 (Kernel updated)
