@@ -472,9 +472,13 @@ travel <- oil[1:776,]
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
 #Save the final file
 write.csv(df, file = "final_data.csv", row.names = FALSE)
+### Start ur code from here###
+#Read the file
+path <- getwd()
+setwd(file.path(getwd(), "data_stocks"))
 st <- read.csv("final_data.csv")
 which(colnames(st) == "X005930.KS.Close")
-#Exclud the stock 
+#Exclude the stock 
 st <- st[,-14]
 
 #Visualize stocks for IT
@@ -493,19 +497,29 @@ dev.off()
 #B-splines with penalty
 library(fda)
 
+library("fda.usc")
+
+##B-splines
 st <- as.matrix(st)
 day <- c(1:776)
-basis <- create.bspline.basis(c(1,776),nbasis= 300, norder = 5)
-#Second derivative
-D2lfd = int2Lfd(2)
-D2fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=1e4)
 
-gcv = rep(0,20)
-df = rep(0,20)
-sse = rep(0,20)
+nrow(st)
 
-lambda_seq = 10^{seq(-7, 3, length.out = 20)}
-for(i in 1:20){
+l <- c(0 ,2^seq(-9, 9, len = 40))
+nb <- seq(7, 40, by = 2)
+time_points <- 1:776
+fdata_obj <- fdata(t(st), argvals = time_points)
+
+out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
+sum((fdata_obj$data - out0$fdata.est)^2)
+basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+
+gcv = rep(0,40)
+df = rep(0,40)
+sse = rep(0,40)
+
+lambda_seq = c(0 ,2^seq(-9, 9, len = 40))
+for(i in 1:40){
   lambda=lambda_seq[i]
   tD2fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=lambda)
   
@@ -517,23 +531,59 @@ for(i in 1:20){
 }
 
 
-#Plot SSE, Df and GCV with assigned lamda
 par(mfrow = c(3,1))
-plot(-17:2,df[1:20],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
-plot(-17:2,sse[1:20],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
-plot(-17:2,gcv[1:20],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
+plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
+plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
+plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
 dev.off()
 
-#Choose minimum GCV
 optimal_lambda_index = which.min(gcv)
 optimal_lambda = lambda_seq[optimal_lambda_index]
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
 
-tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=optimal_lambda)
+
+
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
 smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
-plotfit.fd(st,day,smooth$fd)
+plot(smooth)
 
+out0$numbasis.opt
+out0$lambda.opt
+
+plot(out0$fdataobj)
+names(out0$fdataobj)
+dim(t(out0$fdataobj$data))
+dim(t(st))
+SSE <-sum((st - t(out0$fdataobj$data))^2)
+st[1,]
 
 #Kernel smoothing
+
+out3 <- optim.np(st, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
+
+out4 <- optim.np(st, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+
+out5 <- optim.np(st, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
+
+out6 <- optim.np(st, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
+
+dev.new(width = 150, height = 110, units = "mm")
+par(mfrow = c(1,2))
+contour(nb, l, out0$gcv, ylab = "Lambda", xlab = "Number of basis", 
+        main = "GCV criteria by optim.basis()")
+plot(out1$h, out1$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
+     xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
+legend(x = 3, y = 6, legend = c("Ker.norm-S.NW", "Ker.norm-S.LLR", 
+                                  "Ker.norm-S.KNN", "Ker.tri-S.NW",
+                                  "Ker.epa-S.NW", "Ker.unif-S.NW"),
+       box.col = "white", lwd = c(2, 2, 2), col = c(3, 4, 5, 6, 7, 8),cex = 0.75)
+lines(out2$h,out2$gcv, col = 4, lwd = 2)
+lines(out3$h,out3$gcv, col = 5, lwd = 2)
+lines(out4$h,out4$gcv, col = 6, lwd = 2)
+lines(out5$h,out5$gcv, col = 7, lwd = 2)
+lines(out6$h,out6$gcv, col = 8, lwd = 2)
+
+plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
+     xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
