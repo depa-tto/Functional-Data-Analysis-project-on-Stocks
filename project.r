@@ -308,9 +308,9 @@ apple <- apple$AAPL.Close
 head(apple)
 
 
-samsung <- getSymbols("005930.KS", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
-samsung <- samsung$`005930.KS.Close`
-head(samsung)
+ibm <- getSymbols("IBM", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
+ibm <- ibm$IBM.Close
+head(ibm)
 
 
 microsoft <- getSymbols("MSFT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
@@ -322,13 +322,13 @@ google <- google$GOOG.Close
 head(google)
 
 
-it_stocks <- merge(spotify,netflix,nvidia,meta,apple,samsung,microsoft,google)
+it_stocks <- merge(spotify,netflix,nvidia,meta,apple,ibm,microsoft,google)
 head(it_stocks)
 sum(is.na(it_stocks))
 
 
 it_stocks <- as.data.frame(lapply(it_stocks, fill_na_with_moving_avg))
-nrow(it_stocks) # 780
+nrow(it_stocks) # 756
 sum(is.na(it_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/it_stocks.csv"
@@ -444,12 +444,12 @@ file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functiona
 library(ggplot2)
 
 
-#Your file_path
+# your file_path
 path <- getwd()
 path
 setwd(file.path(getwd(), "data_stocks"))
 
-#Read CSV
+# read CSV
 it <- read.csv("it_stocks.csv")
 automobile <- read.csv("automobile_stocks.csv")
 fashion<- read.csv("fashion_stocks.csv")
@@ -459,7 +459,7 @@ oil<- read.csv("oil_stocks.csv")
 travel <- read.csv("travel_stocks.csv")
 logistics <- read.csv("logistics_stocks.csv")
 
-#Exclude rows for stocks higher than 776
+# exclude rows for stocks higher than 776
 logistics <-logistics[1:776,]
 it <- it[1:776,]
 automobile <- automobile[1:776,]
@@ -468,12 +468,12 @@ healthcare <- healthcare[1:776,]
 food <- food[1:776,]
 oil <- oil[1:776,]
 travel <- oil[1:776,]
-#Merge all stocks
+# merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
-#Save the final file
+# save the final file
 write.csv(st, file = "final_data.csv", row.names = FALSE)
 
-########################################################################## Start ur code from here ##########################################################################
+########################################################################## start ur code from here ##########################################################################
 library(quantmod)
 library(tidyquant)
 library(tidyverse)
@@ -485,7 +485,7 @@ library(httr)
 path <- getwd()
 setwd(file.path(getwd(), "data_stocks"))
 st <- read.csv("final_data.csv")
-which(colnames(st) == "X005930.KS.Close")
+which(colnames(st) == "X005930.KS.Close") # samsung
 # Exclude the stock 
 st <- st[,-14]
 
@@ -499,6 +499,18 @@ plot(st$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close",
      main="NVDA Close Prices")
 plot(st$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
      main="META Close Prices")
+
+opar <- par(mfrow=c(2,2))
+plot(st$AAPL.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
+     main="SPOT Close Prices")
+plot(st$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
+     main="NFLX Close Prices")
+plot(st$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
+     main="NVDA Close Prices")
+plot(st$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
+     main="META Close Prices")
+dev.off()
+
 dev.off()
 
 
