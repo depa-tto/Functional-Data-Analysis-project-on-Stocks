@@ -27,6 +27,7 @@ kering <- getSymbols("KER.PA", src = "yahoo", from = "2020-01-01", to = "2022-12
 kering <- kering$KER.PA.Close
 head(kering)
 
+
 cpri <- getSymbols("CPRI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 cpri <- cpri$CPRI.Close
 head(cpri)
@@ -65,7 +66,7 @@ nrow(fashion_stocks) # 776
 sum(is.na(fashion_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/fashion_stocks.csv"
-write.csv(fashion_stocks, file_path, row.names = FALSE)
+# write.csv(fashion_stocks, file_path, row.names = FALSE)
 
 # food companies
 
@@ -113,7 +114,7 @@ nrow(food_stoks) # 776
 sum(is.na(food_stoks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/food_stoks.csv"
-write.csv(food_stoks, file_path, row.names = FALSE)
+# write.csv(food_stoks, file_path, row.names = FALSE)
 
 
 # travel 
@@ -177,7 +178,7 @@ nrow(travel_stocks) # 776
 sum(is.na(travel_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/travel_stocks.csv"
-write.csv(travel_stocks, file_path, row.names = FALSE)
+# write.csv(travel_stocks, file_path, row.names = FALSE)
 
 # oil and gas
 
@@ -228,7 +229,7 @@ nrow(oil_stocks) # 776
 sum(is.na(oil_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/oil_stocks.csv"
-write.csv(oil_stocks, file_path, row.names = FALSE)
+# write.csv(oil_stocks, file_path, row.names = FALSE)
 
 # logistic
 
@@ -278,7 +279,7 @@ nrow(logistics_stocks) # 781
 sum(is.na(logistics_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/logistics_stocks.csv"
-write.csv(logistics_stocks, file_path, row.names = FALSE)
+# write.csv(logistics_stocks, file_path, row.names = FALSE)
 
 
 # technology
@@ -333,7 +334,7 @@ nrow(it_stocks) # 780
 sum(is.na(it_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/it_stocks.csv"
-write.csv(it_stocks, file_path, row.names = FALSE)
+# write.csv(it_stocks, file_path, row.names = FALSE)
 
 
 # automobile companies
@@ -386,7 +387,7 @@ sum(is.na(automobile_stocks))
 
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/automobile_stocks.csv"
-write.csv(automobile_stocks, file_path, row.names = FALSE)
+# write.csv(automobile_stocks, file_path, row.names = FALSE)
 
 # healthcare companys
 
@@ -441,21 +442,22 @@ sum(is.na(healthcare_stocks))
 
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/healthcare_stocks.csv"
-write.csv(healthcare_stocks, file_path, row.names = FALSE)
+# write.csv(healthcare_stocks, file_path, row.names = FALSE)
 library(ggplot2)
 
 
 #Your file_path
 path <- getwd()
+path
 setwd(file.path(getwd(), "data_stocks"))
 
 #Read CSV
 it <- read.csv("it_stocks.csv")
 automobile <- read.csv("automobile_stocks.csv")
-fashion<- read.csv("fashion_stocks.csv")
-healthcare<- read.csv("healthcare_stocks.csv")
+fashion <- read.csv("fashion_stocks.csv")
+healthcare <- read.csv("healthcare_stocks.csv")
 food <- read.csv("food_stoks.csv")
-oil<- read.csv("oil_stocks.csv")
+oil <- read.csv("oil_stocks.csv")
 travel <- read.csv("travel_stocks.csv")
 logistics <- read.csv("logistics_stocks.csv")
 
@@ -468,10 +470,13 @@ healthcare <- healthcare[1:776,]
 food <- food[1:776,]
 oil <- oil[1:776,]
 travel <- oil[1:776,]
+
 #Merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
+st
 #Save the final file
 write.csv(df, file = "final_data.csv", row.names = FALSE)
+
 ### Start ur code from here###
 #Read the file
 path <- getwd()
@@ -483,15 +488,86 @@ st <- st[,-14]
 
 #Visualize stocks for IT
 opar <- par(mfrow=c(2,2))
-plot(st$day, df$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
+plot(st$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
      main="SPOT Close Prices")
-plot(st$day, df$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
+plot(st$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
      main="NFLX Close Prices")
-plot(st$day, df$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
+plot(st$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
      main="NVDA Close Prices")
-plot(st$day, df$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
+plot(st$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
      main="META Close Prices")
 dev.off()
+
+
+
+# DEPTH
+
+library(DepthProc)
+library(MultiRNG)
+
+
+depth(mean(st),st)
+depth(median(st),st)
+median(st)
+sort(depth(st,st),decreasing=TRUE) 
+
+# Find maximal depth
+
+depth_val <- numeric(776)
+for(i in 1:776) {
+  depth_val[i] <- depth(st[i], st)
+}
+#maximal depth
+max(depth_val)
+
+st[which.max(depth_val)]
+median(st)
+
+# Euclidean depth
+
+dE <- depthEuclid(st, st)
+mdE <- which.max(dE)
+dE[mdE]
+st[mdE,] # deepest point
+
+
+apply(st,2,median)
+
+plot(st)
+points(st[mdE,1], st[mdE,2], pch=23, col="blue", bg="blue", lwd=2)
+points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
+# red one is median point while the blue one is the deepest point, affected by outliers
+
+
+# Local depth
+dL <- depthLocal(st, st, depth_params1 = list(method = "LP"))
+dL
+mdL <- which.max(dL)
+dL[mdL]
+st[mdL,]
+
+depthContour(st, depth_params = list(method = "Local", depth_params1 = list(method = "LP"))) # 3D plot
+
+# MBD, Frainman-Muniz
+dMBD <- fncDepth(st, method = "MBD")
+dFM <- fncDepth(st, method = "FM")
+mdMBD <- which.max(dMBD)
+mdFM <- which.max(dFM)
+
+dMBD[mdMBD]
+st[mdMBD,]
+
+dFM[mdFM]
+st[mdFM,]
+
+plot(st, xlim=c(3,5), ylim=c(3,7))
+points(st[mdMBD,1], st[mdMBD,2], pch=23, col="blue", bg="blue", lwd=2)
+points(st[mdFM,1], st[mdFM,2], pch=23, col="green", bg="green", lwd=2)
+points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
+
+fncDepthMedian(st, method = "MBD")
+fncDepthMedian(st, method = "FM")
+
 
 
 #B-splines with penalty
@@ -553,7 +629,6 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
 plot(smooth)
 
-plot(out0)
 
 plot(out0$fdataobj)
 names(out0$fdataobj)
@@ -561,6 +636,10 @@ dim(t(out0$fdataobj$data))
 dim(t(st))
 SSE <-sum((st - t(out0$fdataobj$data))^2)
 st[1,]
+
+
+
+
 
 #Kernel smoothing
 
