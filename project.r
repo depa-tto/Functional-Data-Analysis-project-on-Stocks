@@ -27,7 +27,6 @@ kering <- getSymbols("KER.PA", src = "yahoo", from = "2020-01-01", to = "2022-12
 kering <- kering$KER.PA.Close
 head(kering)
 
-
 cpri <- getSymbols("CPRI", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 cpri <- cpri$CPRI.Close
 head(cpri)
@@ -66,7 +65,7 @@ nrow(fashion_stocks) # 776
 sum(is.na(fashion_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/fashion_stocks.csv"
-# write.csv(fashion_stocks, file_path, row.names = FALSE)
+write.csv(fashion_stocks, file_path, row.names = FALSE)
 
 # food companies
 
@@ -114,7 +113,7 @@ nrow(food_stoks) # 776
 sum(is.na(food_stoks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/food_stoks.csv"
-# write.csv(food_stoks, file_path, row.names = FALSE)
+write.csv(food_stoks, file_path, row.names = FALSE)
 
 
 # travel 
@@ -178,7 +177,7 @@ nrow(travel_stocks) # 776
 sum(is.na(travel_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/travel_stocks.csv"
-# write.csv(travel_stocks, file_path, row.names = FALSE)
+write.csv(travel_stocks, file_path, row.names = FALSE)
 
 # oil and gas
 
@@ -229,7 +228,7 @@ nrow(oil_stocks) # 776
 sum(is.na(oil_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/oil_stocks.csv"
-# write.csv(oil_stocks, file_path, row.names = FALSE)
+write.csv(oil_stocks, file_path, row.names = FALSE)
 
 # logistic
 
@@ -279,7 +278,7 @@ nrow(logistics_stocks) # 781
 sum(is.na(logistics_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/logistics_stocks.csv"
-# write.csv(logistics_stocks, file_path, row.names = FALSE)
+write.csv(logistics_stocks, file_path, row.names = FALSE)
 
 
 # technology
@@ -334,7 +333,7 @@ nrow(it_stocks) # 780
 sum(is.na(it_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/it_stocks.csv"
-# write.csv(it_stocks, file_path, row.names = FALSE)
+write.csv(it_stocks, file_path, row.names = FALSE)
 
 
 # automobile companies
@@ -387,7 +386,7 @@ sum(is.na(automobile_stocks))
 
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/automobile_stocks.csv"
-# write.csv(automobile_stocks, file_path, row.names = FALSE)
+write.csv(automobile_stocks, file_path, row.names = FALSE)
 
 # healthcare companys
 
@@ -442,22 +441,21 @@ sum(is.na(healthcare_stocks))
 
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/healthcare_stocks.csv"
-# write.csv(healthcare_stocks, file_path, row.names = FALSE)
+write.csv(healthcare_stocks, file_path, row.names = FALSE)
 library(ggplot2)
 
 
 #Your file_path
 path <- getwd()
-path
 setwd(file.path(getwd(), "data_stocks"))
 
 #Read CSV
 it <- read.csv("it_stocks.csv")
 automobile <- read.csv("automobile_stocks.csv")
-fashion <- read.csv("fashion_stocks.csv")
-healthcare <- read.csv("healthcare_stocks.csv")
+fashion<- read.csv("fashion_stocks.csv")
+healthcare<- read.csv("healthcare_stocks.csv")
 food <- read.csv("food_stoks.csv")
-oil <- read.csv("oil_stocks.csv")
+oil<- read.csv("oil_stocks.csv")
 travel <- read.csv("travel_stocks.csv")
 logistics <- read.csv("logistics_stocks.csv")
 
@@ -470,13 +468,10 @@ healthcare <- healthcare[1:776,]
 food <- food[1:776,]
 oil <- oil[1:776,]
 travel <- oil[1:776,]
-
 #Merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
-st
 #Save the final file
 write.csv(df, file = "final_data.csv", row.names = FALSE)
-
 ### Start ur code from here###
 #Read the file
 path <- getwd()
@@ -488,16 +483,15 @@ st <- st[,-14]
 
 #Visualize stocks for IT
 opar <- par(mfrow=c(2,2))
-plot(st$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
+plot(st$day, df$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
      main="SPOT Close Prices")
-plot(st$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
+plot(st$day, df$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
      main="NFLX Close Prices")
-plot(st$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
+plot(st$day, df$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
      main="NVDA Close Prices")
-plot(st$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
+plot(st$day, df$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
      main="META Close Prices")
 dev.off()
-
 
 
 # DEPTH
@@ -594,6 +588,7 @@ basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
 #Calculate SSE
 SSE <-sum((fdata_obj - out0$fdata.est )^2)
 
+
 gcv = rep(0,40)
 df = rep(0,40)
 sse = rep(0,40)
@@ -621,14 +616,17 @@ optimal_lambda_index = which.min(gcv)
 optimal_lambda = lambda_seq[optimal_lambda_index]
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
+basis <- create.bspline.basis(c(1,776),nbasis= 39, norder = 4)
+smooth = smooth.basis(day, st,basis )
 
-
+smooth$fd
 
 tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
 smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
 plot(smooth)
 
+<<<<<<< HEAD
 
 plot(out0$fdataobj)
 names(out0$fdataobj)
@@ -644,27 +642,65 @@ st[1,]
 
 
 >>>>>>> parent of 7cf9c51 (Kernel updated)
+=======
+>>>>>>> 70544f7541eccaec1306643b96303d22992ef2d8
 #Kernel smoothing
+out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
+out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
 
-out3 <- optim.np(st, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
+out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
 
-out4 <- optim.np(st, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
 
-out5 <- optim.np(st, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
+out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
 
-out6 <- optim.np(st, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
+out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
 
-dev.new(width = 150, height = 110, units = "mm")
-par(mfrow = c(1,2))
+
+SSE_out1 <-sum((fdata_obj - out1$fdata.est )^2)
+SSE_out2 <-sum((fdata_obj - out2$fdata.est )^2)
+SSE_out3 <-sum((fdata_obj - out3$fdata.est )^2)
+SSE_out4 <-sum((fdata_obj - out4$fdata.est )^2)
+SSE_out5 <-sum((fdata_obj - out5$fdata.est )^2)
+SSE_out6 <-sum((fdata_obj - out6$fdata.est )^2)
+
+
+# Combine GCV values into a vector
+gcv_values <- c(out0$gcv.opt, out1$gcv.opt, out2$gcv.opt, out3$gcv.opt, 
+                out4$gcv.opt, out5$gcv.opt, out6$gcv.opt)
+
+# Define labels for each method
+methods <- c("out0", "out1", "out2", "out3", "out4", "out5", "out6")
+
+# Plot GCV values
+barplot(gcv_values, names.arg = methods, col = "lightblue", main = "GCV Comparison",
+        ylab = "GCV Value", xlab = "Methods", las = 2)
+
+# Compute Sum of Squared Errors (SSE) for each method
+sse_values <- c(SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
+
+# Plot SSE values
+barplot(sse_values, names.arg = methods[-1], col = "lightcoral", main = "SSE Comparison",
+        ylab = "Sum of Squared Errors", xlab = "Methods", las = 2)
+
+par(mfrow = c(1, 1))  # Reset layout to default
+
+
+plot(SSE_out1)
+
+names(out1)
+
 contour(nb, l, out0$gcv, ylab = "Lambda", xlab = "Number of basis", 
         main = "GCV criteria by optim.basis()")
+
+
+dev.new(width = 150, height = 110, units = "mm")
 plot(out1$h, out1$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
      xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
 legend(x = 3, y = 6, legend = c("Ker.norm-S.NW", "Ker.norm-S.LLR", 
                                   "Ker.norm-S.KNN", "Ker.tri-S.NW",
                                   "Ker.epa-S.NW", "Ker.unif-S.NW"),
        box.col = "white", lwd = c(2, 2, 2), col = c(3, 4, 5, 6, 7, 8),cex = 0.75)
-lines(out2$h,out2$gcv, col = 4, lwd = 2)
 lines(out3$h,out3$gcv, col = 5, lwd = 2)
 lines(out4$h,out4$gcv, col = 6, lwd = 2)
 lines(out5$h,out5$gcv, col = 7, lwd = 2)
@@ -672,8 +708,31 @@ lines(out6$h,out6$gcv, col = 8, lwd = 2)
 
 plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
      xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
-<<<<<<< HEAD
 
+###Plotting the differet smoothing 
+lines(st[,1], col = "red")
+par(mfrow = c(1,2))
+plot(out0$fdata.est[4,],col ="blue", lwd = 3)
+points(st[,4], col = "red")
+
+plot(out3$fdata.est[4,],col ="blue", lwd = 3)
+points(st[,4], col = "red")
+
+
+
+## Selected smoothing ##
+out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+
+#PCA
+out4
+library(fda)
+fd_obj <- fdata2fd(out4$fdata.est)
+nharm = 4
+pcalist = pca.fd(fd_obj, centerfns = TRUE)
+names(out4)
+
+str(fd_obj)
+class(fd_obj)
 
 # EDA and outliers detection
 smooth.fd = smooth$fd
@@ -691,5 +750,4 @@ lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
 
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
-=======
->>>>>>> parent of 7cf9c51 (Kernel updated)
+
