@@ -3,7 +3,6 @@ library(tidyquant)
 library(tidyverse)
 library(dplyr)
 library(zoo)
-install.packages("httr")
 library(httr)
 
 # REMOVING MISSING VALUES FUNCTION
@@ -65,7 +64,7 @@ nrow(fashion_stocks) # 776
 sum(is.na(fashion_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/fashion_stocks.csv"
-write.csv(fashion_stocks, file_path, row.names = FALSE)
+# write.csv(fashion_stocks, file_path, row.names = FALSE)
 
 # food companies
 
@@ -113,7 +112,7 @@ nrow(food_stoks) # 776
 sum(is.na(food_stoks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/food_stoks.csv"
-write.csv(food_stoks, file_path, row.names = FALSE)
+# write.csv(food_stoks, file_path, row.names = FALSE)
 
 
 # travel 
@@ -177,7 +176,7 @@ nrow(travel_stocks) # 776
 sum(is.na(travel_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/travel_stocks.csv"
-write.csv(travel_stocks, file_path, row.names = FALSE)
+# write.csv(travel_stocks, file_path, row.names = FALSE)
 
 # oil and gas
 
@@ -228,7 +227,7 @@ nrow(oil_stocks) # 776
 sum(is.na(oil_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/oil_stocks.csv"
-write.csv(oil_stocks, file_path, row.names = FALSE)
+# write.csv(oil_stocks, file_path, row.names = FALSE)
 
 # logistic
 
@@ -278,7 +277,7 @@ nrow(logistics_stocks) # 781
 sum(is.na(logistics_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/logistics_stocks.csv"
-write.csv(logistics_stocks, file_path, row.names = FALSE)
+# write.csv(logistics_stocks, file_path, row.names = FALSE)
 
 
 # technology
@@ -333,7 +332,7 @@ nrow(it_stocks) # 780
 sum(is.na(it_stocks))
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/it_stocks.csv"
-write.csv(it_stocks, file_path, row.names = FALSE)
+# write.csv(it_stocks, file_path, row.names = FALSE)
 
 
 # automobile companies
@@ -386,7 +385,7 @@ sum(is.na(automobile_stocks))
 
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/automobile_stocks.csv"
-write.csv(automobile_stocks, file_path, row.names = FALSE)
+# write.csv(automobile_stocks, file_path, row.names = FALSE)
 
 # healthcare companys
 
@@ -441,12 +440,13 @@ sum(is.na(healthcare_stocks))
 
 
 file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functional-Data-Analysis-Project/healthcare_stocks.csv"
-write.csv(healthcare_stocks, file_path, row.names = FALSE)
+# write.csv(healthcare_stocks, file_path, row.names = FALSE)
 library(ggplot2)
 
 
 #Your file_path
 path <- getwd()
+path
 setwd(file.path(getwd(), "data_stocks"))
 
 #Read CSV
@@ -471,51 +471,43 @@ travel <- oil[1:776,]
 #Merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
 #Save the final file
-write.csv(df, file = "final_data.csv", row.names = FALSE)
-### Start ur code from here###
-#Read the file
+write.csv(st, file = "final_data.csv", row.names = FALSE)
+
+########################################################################## Start ur code from here ##########################################################################
+library(quantmod)
+library(tidyquant)
+library(tidyverse)
+library(dplyr)
+library(zoo)
+library(httr)
+
+# Read the file
 path <- getwd()
 setwd(file.path(getwd(), "data_stocks"))
 st <- read.csv("final_data.csv")
 which(colnames(st) == "X005930.KS.Close")
-#Exclude the stock 
+# Exclude the stock 
 st <- st[,-14]
 
-#Visualize stocks for IT
+# Visualize stocks for IT
 opar <- par(mfrow=c(2,2))
-plot(st$day, df$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
+plot(st$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
      main="SPOT Close Prices")
-plot(st$day, df$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
+plot(st$NFLX.Close, type="l", col="red", lwd=2, xlab="", ylab="NFLX Close", 
      main="NFLX Close Prices")
-plot(st$day, df$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
+plot(st$NVDA.Close, type="l", col="green", lwd=2, xlab="", ylab="NVDA Close", 
      main="NVDA Close Prices")
-plot(st$day, df$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
+plot(st$META.Close, type="l", col="purple", lwd=2, xlab="", ylab="META Close", 
      main="META Close Prices")
 dev.off()
 
 
-# DEPTH
+# Depth analysis before smoothing
 
 library(DepthProc)
 library(MultiRNG)
 
-
-depth(mean(st),st)
-depth(median(st),st)
-median(st)
-sort(depth(st,st),decreasing=TRUE) 
-
-# Find maximal depth
-
-depth_val <- numeric(776)
-for(i in 1:776) {
-  depth_val[i] <- depth(st[i], st)
-}
-#maximal depth
-max(depth_val)
-
-st[which.max(depth_val)]
-median(st)
+st <- as.matrix(st)
 
 # Euclidean depth
 
@@ -563,36 +555,37 @@ fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
 
 
-
-#B-splines with penalty
+# B-splines with penalty
 library(fda)
 
 library("fda.usc")
 
-##B-splines
+### B-splines
 st <- as.matrix(st)
 day <- c(1:776)
 
 nrow(st)
-#Create a grid for lambda and number of basis
+# Create a grid for lambda and number of basis
 l <- c(0 ,2^seq(-9, 9, len = 40))
 nb <- seq(7, 40, by = 2)
 time_points <- 1:776
-#Create functional ojects with argumen values
+# Create functional ojects with argumen values
 fdata_obj <- fdata(t(st), argvals = time_points)
+
+
 # Smooth with B-splines
 out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
 sum((fdata_obj$data - out0$fdata.est)^2)
 basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
 
-#Calculate SSE
+# Calculate SSE
 SSE <-sum((fdata_obj - out0$fdata.est )^2)
 
 
 gcv = rep(0,40)
 df = rep(0,40)
 sse = rep(0,40)
-#Iterate with different lambda for graph
+# Iterate with different lambda for graph
 lambda_seq = c(0 ,2^seq(-9, 9, len = 40))
 for(i in 1:40){
   lambda=lambda_seq[i]
@@ -605,13 +598,14 @@ for(i in 1:40){
   sse[i] = smooth$SSE
 }
 
-#Plot df, SSE and GCV
+# Plot df, SSE and GCV
 par(mfrow = c(3,1))
 plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
 plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
 plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
 dev.off()
-#Find optimal lambda
+
+# Find optimal lambda
 optimal_lambda_index = which.min(gcv)
 optimal_lambda = lambda_seq[optimal_lambda_index]
 optimal_df = df[optimal_lambda_index]
@@ -623,15 +617,12 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
 plot(smooth)
 
-#Kernel smoothing
+### Kernel smoothing
 out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
 out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
 out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
-
 out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
-
 out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
-
 out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
 
 
@@ -689,23 +680,64 @@ plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ",
 
 
 
-## Selected smoothing ##
+### Selected smoothing ###
+
 out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+
+str(out4)
+names(out4)
+
+plot(out4$h, out4$gcv, type = "b", pch = 19, col = "blue",
+     xlab = "Smoothing Parameter (h)", ylab = "GCV",
+     main = "Generalized Cross Validation Curve")
+abline(v = out4$h.opt, col = "red", lty = 2) 
+grid()
+
+
+plot(out4$fdata.est, main = "Smoothed Functional Data") # smoothed functions
+
+
+plot(mean(out4$fdata.est))
+plot(sd(out4$fdata.est))
 
 
 # EDA and outliers detection
-smooth.fd = smooth$fd
+# elementary pointwise mean and standard deviation
 
-plot(smooth.fd)
+library(fda)
+triweight.fd <- fdata2fd(out4$fdata.est)  
 
-b_spline_mean = mean.fd(smooth.fd)
-b_spline_sd = std.fd(smooth.fd)
+triweight.fd = out4$fd
 
-lines(b_spline_mean, lwd=4, lty=2, col=2)
-lines(b_spline_sd, lwd=4, lty=2, col=4)
+plot(triweight.fd)
 
-lines(b_spline_mean-b_spline_sd, lwd=4, lty=2, col=6)
-lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
+triweight_mean = mean.fd(triweight.fd)
+triweight_sd = std.fd(triweight.fd)
 
-lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
-lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+lines(triweight_mean, lwd=4, lty=2, col=2)
+lines(triweight_sd, lwd=4, lty=2, col=4)
+
+lines(triweight_mean-triweight_sd, lwd=4, lty=2, col=6)
+lines(triweight_mean+triweight_sd, lwd=4, lty=2, col=6)
+
+lines(triweight_mean-2*triweight_sd, lwd=4, lty=2, col=8)
+lines(triweight_mean+2*triweight_sd, lwd=4, lty=2, col=8)
+
+
+
+
+# The Bivariate Covariance Function v(s; t)
+
+triweight.bifd = var.fd(triweight.fd)
+
+weektime        = seq(0,365,length=53)
+logprecvar_mat  = eval.bifd(weektime, weektime,
+                            triweight.bifd)
+
+
+persp(weektime, weektime, logprecvar_mat,
+      theta=-45, phi=25, r=3, expand = 0.5,
+      ticktype='detailed',
+      xlab="Day",
+      ylab="Day",
+      zlab="variance(log10 precip)")
