@@ -504,20 +504,24 @@ st <- as.matrix(st)
 day <- c(1:776)
 
 nrow(st)
-
+#Create a grid for lambda and number of basis
 l <- c(0 ,2^seq(-9, 9, len = 40))
 nb <- seq(7, 40, by = 2)
 time_points <- 1:776
+#Create functional ojects with argumen values
 fdata_obj <- fdata(t(st), argvals = time_points)
-
+# Smooth with B-splines
 out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
 sum((fdata_obj$data - out0$fdata.est)^2)
 basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
 
+#Calculate SSE
+SSE <-sum((fdata_obj - out0$fdata.est )^2)
+
 gcv = rep(0,40)
 df = rep(0,40)
 sse = rep(0,40)
-
+#Iterate with different lambda for graph
 lambda_seq = c(0 ,2^seq(-9, 9, len = 40))
 for(i in 1:40){
   lambda=lambda_seq[i]
@@ -530,13 +534,13 @@ for(i in 1:40){
   sse[i] = smooth$SSE
 }
 
-
+#Plot df, SSE and GCV
 par(mfrow = c(3,1))
 plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
 plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
 plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
 dev.off()
-
+#Find optimal lambda
 optimal_lambda_index = which.min(gcv)
 optimal_lambda = lambda_seq[optimal_lambda_index]
 optimal_df = df[optimal_lambda_index]
@@ -549,8 +553,7 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
 plot(smooth)
 
-out0$numbasis.opt
-out0$lambda.opt
+plot(out0)
 
 plot(out0$fdataobj)
 names(out0$fdataobj)
