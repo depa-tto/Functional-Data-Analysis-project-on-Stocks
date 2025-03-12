@@ -639,9 +639,6 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
 plot(smooth)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
 plot(out0$fdataobj)
 names(out0$fdataobj)
 dim(t(out0$fdataobj$data))
@@ -649,17 +646,6 @@ dim(t(st))
 SSE <-sum((st - t(out0$fdataobj$data))^2)
 st[1,]
 
-
-
-<<<<<<< HEAD
-=======
-
-
->>>>>>> parent of 7cf9c51 (Kernel updated)
-=======
->>>>>>> 70544f7541eccaec1306643b96303d22992ef2d8
-#Kernel smoothing
-=======
 
 # EDA and outliers detection for b-spline
 smooth.fd = smooth$fd
@@ -769,7 +755,7 @@ boxplot(smooth.fd)
 
 
 ### Kernel smoothing
->>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
+
 out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
 out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
 
@@ -873,10 +859,5 @@ mean_kernel <- plot(mean(out3$fdata.est))
 plot(out3$fdata.est, main = "Smoothed Functional Data")
 
 
-
-<<<<<<< HEAD
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
-
-=======
->>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
