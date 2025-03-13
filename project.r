@@ -485,6 +485,7 @@ library(MultiRNG)
 library(fda)
 library(fda.usc)
 library(fdaoutlier)
+library(fda)
 
 # Read the file
 path <- getwd()
@@ -748,6 +749,112 @@ fbplot(lgp, method="BD2")
 fbplot(lgp, method="MBD")
 
 
+
+### Functional PCA
+nharm = 4
+pcalist = pca.fd(smooth.fd, nharm, centerfns = TRUE) # first 4 principal components (nharm = 4), centered around the mean curve
+plot(pcalist)
+plot(pcalist$harmonics)
+
+
+fd.pca1.list <- list() 
+fd.pca2.list <- list() 
+fd.pca3.list <- list() 
+fd.pca4.list <- list() 
+
+# The following blocks of code reconstruct functional data using the PCA 
+# scores, step by step, starting with the mean curve and adding the 
+# components progressively:
+
+for(i in 1:5) {
+  fd.pca1.list[[i]] <- mean.fd(smooth.fd) + 
+    pcalist$scores[i,1]*pcalist$harmonics[1]
+  
+  fd.pca2.list[[i]] <- mean.fd(smooth.fd) + 
+    pcalist$scores[i,1]*pcalist$harmonics[1] + 
+    pcalist$scores[i,2]*pcalist$harmonics[2]
+  
+  fd.pca3.list[[i]]<- mean.fd(smooth.fd) +
+    pcalist$scores[i,1]*pcalist$harmonics[1] + 
+    pcalist$scores[i,2]*pcalist$harmonics[2] +
+    pcalist$scores[i,3]*pcalist$harmonics[3] 
+  
+  fd.pca4.list[[i]]<- mean.fd(smooth.fd) +
+    pcalist$scores[i,1]*pcalist$harmonics[1] + 
+    pcalist$scores[i,2]*pcalist$harmonics[2] +
+    pcalist$scores[i,3]*pcalist$harmonics[3] +
+    pcalist$scores[i,4]*pcalist$harmonics[4]
+}
+
+
+opar <- par(mfrow=c(2,2), ask = TRUE)
+for(i in 1:5) {
+  plot(fd.pca1.list[[i]], ylim=c(-1, 1), ylab = "1 PC")
+  lines(smooth.fd[i], col = 2)
+  
+  plot(fd.pca2.list[[i]], ylim=c(-1, 1), ylab = "2 PC")
+  lines(smooth.fd[i], col = 2)
+  
+  plot(fd.pca3.list[[i]], ylim=c(-1, 1), ylab = "3 PC")
+  lines(smooth.fd[i], col = 2)
+  
+  plot(fd.pca4.list[[i]], ylim=c(-1, 1), ylab = "4 PC")
+  lines(smooth.fd[i], col = 2)
+}
+par(opar)
+
+#### Rotation
+varmx <- varmx.pca.fd(pcalist)
+plot(varmx)
+
+plot(varmx$harmonics)
+
+plotscores(varmx, loc = 5)
+
+
+# PCA restore the original curves
+fd.vrm1.list <- list() 
+fd.vrm2.list <- list() 
+fd.vrm3.list <- list() 
+fd.vrm4.list <- list() 
+
+for(i in 1:5) {
+  fd.vrm1.list[[i]] <- mean.fd(smooth.fd) + 
+    varmx$scores[i,1]*varmx$harmonics[1]
+  
+  fd.vrm2.list[[i]] <- mean.fd(smooth.fd) +
+    varmx$scores[i,1]*varmx$harmonics[1] + 
+    varmx$scores[i,2]*varmx$harmonics[2]
+  
+  fd.vrm3.list[[i]]<- mean.fd(smooth.fd) +
+    varmx$scores[i,1]*varmx$harmonics[1] + 
+    varmx$scores[i,2]*varmx$harmonics[2] +
+    varmx$scores[i,3]*varmx$harmonics[3] 
+  
+  fd.vrm4.list[[i]]<- mean.fd(smooth.fd) +
+    varmx$scores[i,1]*varmx$harmonics[1] + 
+    varmx$scores[i,2]*varmx$harmonics[2] +
+    varmx$scores[i,3]*varmx$harmonics[3] +
+    varmx$scores[i,4]*varmx$harmonics[4]
+}
+
+opar <- par(mfrow=c(2,2), ask = TRUE)
+for(i in 1:5) {
+  plot(fd.vrm1.list[[i]], ylim=c(-1, 1), ylab = "1 PC")
+  lines(smooth.fd[i], col = 2)
+  
+  plot(fd.vrm2.list[[i]], ylim=c(-1, 1), ylab = "2 PC")
+  lines(smooth.fd[i], col = 2)
+  
+  plot(fd.vrm3.list[[i]], ylim=c(-1, 1), ylab = "3 PC")
+  lines(smooth.fd[i], col = 2)
+  
+  plot(fd.vrm4.list[[i]], ylim=c(-1, 1), ylab = "4 PC")
+  lines(smooth.fd[i], col = 2)
+}
+par(opar)
+
+
 ### Kernel smoothing
 
 out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV")) # Local regression
@@ -833,23 +940,3 @@ plot(out3$h, out3$gcv, type = "b", pch = 19, col = "blue",
 abline(v = out3$h.opt, col = "red", lty = 2) 
 grid()
 
-#PCA
-out4
-library(fda)
-fd_obj <- fdata2fd(out4$fdata.est)
-nharm = 4
-pcalist = pca.fd(fd_obj, centerfns = TRUE)
-names(out4)
-
-str(fd_obj)
-class(fd_obj)
-
-plot(out3$fdata.est, main = "Smoothed Functional Data") # smoothed functions
-
-mean_kernel <- plot(mean(out3$fdata.est))
-
-plot(out3$fdata.est, main = "Smoothed Functional Data")
-
-
-lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
-lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
