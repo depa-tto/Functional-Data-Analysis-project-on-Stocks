@@ -480,6 +480,11 @@ library(tidyverse)
 library(dplyr)
 library(zoo)
 library(httr)
+library(DepthProc)
+library(MultiRNG)
+library(fda)
+library(fda.usc)
+library(fdaoutlier)
 
 # Read the file
 path <- getwd()
@@ -513,9 +518,6 @@ dev.off()
 
 
 # Depth analysis before smoothing
-
-library(DepthProc)
-library(MultiRNG)
 
 st <- as.matrix(st)
 sum(is.na(st))
@@ -571,19 +573,17 @@ points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
 fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
 
-# B-splines with penalty
-library(fda)
-library(fda.usc)
 
 ### B-splines
 st <- as.matrix(st)
 day <- c(1:756)
-
 nrow(st)
+
 # Create a grid for lambda and number of basis
 l <- c(0 ,2^seq(-9, 9, len = 40))
 nb <- seq(7, 40, by = 2)
 time_points <- 1:756
+
 # Create functional ojects with argumen values
 fdata_obj <- fdata(t(st), argvals = time_points)
 
@@ -591,7 +591,7 @@ fdata_obj <- fdata(t(st), argvals = time_points)
 # Smooth with B-splines
 out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
 sum((fdata_obj$data - out0$fdata.est)^2)
-basis <- create.bspline.basis(c(1,756),nbasis= out0$numbasis.opt, norder = 4)
+basis <- create.bspline.basis(c(1,756),nbasis= out0$numbasis.opt, norder = 4) # cubic splines
 
 out0$fdata.est # the smoothed functional data
 out0$numbasis.opt # the optimal number of basis functions
@@ -617,16 +617,19 @@ for(i in 1:40){
   sse[i] = smooth$SSE
 }
 
+
 # Plot df, SSE and GCV
 par(mfrow = c(3,1))
-plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
-plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
-plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
+plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5) # shows how model complexity changes with 𝜆
+plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5) # measures fit quality
+plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5) # helps choose the best 𝜆(minimum GCV)
 dev.off()
 
 # Find optimal lambda
 optimal_lambda_index = which.min(gcv)
 optimal_lambda = lambda_seq[optimal_lambda_index]
+optimal_lambda
+
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
 basis <- create.bspline.basis(c(1,776),nbasis= 39, norder = 4)
@@ -637,7 +640,7 @@ smooth$fd
 tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
 smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
-plot(smooth)
+plot(smooth$fd)
 
 plot(out0$fdataobj)
 names(out0$fdataobj)
@@ -666,14 +669,12 @@ lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
 
 
 # the Bivariate Covariance Function v(s; t)
+# this function captures how the variability of the smoothed functional data changes over time
 
 logprecvar.bifd = var.fd(smooth.fd)
 
-print(range(logprecvar.bifd$argvals))
-
-weektime = seq(1,756,length=53)
-logprecvar_mat = eval.bifd(weektime, weektime,
-                            logprecvar.bifd)
+weektime = seq(1,756,length=108) # 108 evenly spaced points between days 1 and 756(approximating weekly intervals)
+logprecvar_mat = eval.bifd(weektime, weektime,logprecvar.bifd)
 
 persp(weektime, weektime, logprecvar_mat,
       theta=-45, phi=25, r=3, expand = 0.5,
@@ -687,82 +688,74 @@ contour(weektime, weektime, logprecvar_mat,
         xlab="Day",
         ylab="Day")
 
+# Contour plot every 5 days
 
-day5time = seq(1,365,5)
-logprec.varmat = eval.bifd(day5time, day5time,
-                           logprecvar.bifd)
+day5time = seq(1,756,5)
+logprec.varmat = eval.bifd(day5time, day5time,logprecvar.bifd)
+
 contour(day5time, day5time, logprec.varmat,
         xlab="Day",
         ylab="Day", lwd=2,
         labcex=1)
 
-
-### Descriptive measures for functional data.
-
-library(fda.usc)
-data(poblenou)
-nox <- poblenou$nox
-working <- poblenou$nox[poblenou$df$day.festive == 0 &
-                          as.integer(poblenou$df$day.week) < 6]
-nonworking <- poblenou$nox[poblenou$df$day.festive == 1 |
-                             as.integer(poblenou$df$day.week) > 5]
-
-# Centrality measures (working)
-
-par( mfrow=c(2, 2) )
-plot(func.mean(working), ylim = c(10, 170),
-     main = "Centrality measures in working days")
-legend(x = 11, y = 170, cex = 1, box.col = "white", lty = 1:5,
-       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
-                                "median.mode","median.RP"))
-lines(func.trim.mode(working, trim = 0.15), col = 2, lty = 2)
-lines(func.trim.RP(working, trim = 0.15), col = 3, lty = 3)
-lines(func.med.mode(working, trim = 0.15), col = 4, lty = 4)
-lines(func.med.RP(working, trim = 0.15), col = 5, lty = 5)
-
-# Centrality measures (non-working)
-plot(func.mean(nonworking), ylim = c(10,170),
-     main = "Centrality measures in non-working days")
-legend(x = 11, y = 170, cex = 1, box.col = "white",lty = 1:5,
-       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
-                                "median.mode","median.RP"))
-lines(func.trim.mode(nonworking, trim = 0.15),col = 2, lty = 2)
-lines(func.trim.RP(nonworking, trim = 0.15),col = 3, lty = 3)
-lines(func.med.mode(nonworking, trim = 0.15),col = 4, lty = 4)
-lines(func.med.RP(nonworking, trim = 0.15),col = 5, lty = 5)
-
-# Measures of dispersion   (working)
-plot(func.var(working),
-     main = "Dispersion measures in working days", ylim = c(100 ,5500))
-legend(x = 11, y = 5300,cex = 1, box.col = "white", lty = 1:3, col = 1:3,
-       legend = c("var", "trimvar.mode", "trimvar.RP"))
-lines(func.trimvar.mode(working,trim = 0.15), col = 2, lty = 2)
-lines(func.trimvar.RP(working,trim = 0.15), col = 3, lty = 3)
-
-# Measures of dispersion   (non-working)
-plot(func.var(nonworking),
-     main = "Dispersion measures in non-working days", ylim = c(100, 5500))
-legend(x = 11, y = 5300, cex = 1, box.col = "white", lty = 1:3, col = 1:3,
-       legend = c("var", "trimvar.mode", "trimvar.RP"))
-lines(func.trimvar.mode(nonworking, trim = 0.15), col = 2, lty = 2)
-lines(func.trimvar.RP(nonworking, trim = 0.15), col = 3, lty = 3)
-
-dev.off()
-
-### boxplot
+### Outlier Detection using Functional Boxplot
 
 boxplot(smooth.fd)
+
+lgp <- eval.fd(day, smooth.fd) # contains the function values evaluated at those specific days
+head(lgp)
+
+# band_depth() computes the band depth of the functional curves. 
+# Band depth measures the "centrality" of a curve relative to the 
+# other curves in the dataset. Curves with low depth are farther from 
+# the center of the group and might be considered outliers.
+
+bd <- band_depth(dt = t(lgp))
+names(bd) <- colnames(lgp)
+bd
+plot(bd, type="l")
+
+
+mbd <- modified_band_depth(t(lgp))
+names(mbd) <- colnames(lgp)
+mbd
+plot(mbd, type="l")
+
+
+fbplot_obj <- functional_boxplot(t(lgp), depth_method = "bd") # performs a functional boxplot using the band depth (BD) method for depth
+fbplot_obj$outliers # extracts the outliers identified by the functional boxplot
+
+fbplot_obj <- functional_boxplot(t(lgp), depth_method = "mbd")
+fbplot_obj$outliers
+
+
+# muod() is a function that calculates functional depth using a 
+# method based on boxplots. It returns the detected outliers based on 
+# this calculation
+m <- muod(t(lgp), cut_method = c("boxplot"))
+m$outliers
+
+fbplot(lgp, method="BD2")
+# 10 25 27 28 40 53 61 are the indices of the curves identified as outliers
+# curve 10 (corresponding to FDX.Close) is considered an outlier, as are curves 25 (corresponding to WMT.Close), 27 (corresponding to SPOT.Close)
+# medcurve represents the curve with the median depth (i.e., the curve that is the most central in the set) --> in this case in Nike
+
+### Interpretation:
+# The outliers are identified as curves with relatively low depth values, which deviate from the general trend of the other curves.
+# The median curve is the one that represents the "average" behavior of the data, with the highest depth.
+
+
+fbplot(lgp, method="MBD")
 
 
 ### Kernel smoothing
 
-out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
-out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
-
+out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV")) # Local regression
+out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV")) # Local kernel
 out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
-out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
-out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
-out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
+out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) # Triweight Kernel
+out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) # Epanechnikov Kerne
+out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) # Uniform Kernel
 
 
 SSE_out1 <-sum((fdata_obj - out1$fdata.est )^2)
@@ -791,7 +784,7 @@ sse_values <- c(SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
 barplot(sse_values, names.arg = methods[-1], col = "lightcoral", main = "SSE Comparison",
         ylab = "Sum of Squared Errors", xlab = "Methods", las = 2)
 
-par(mfrow = c(1, 1))  # Reset layout to default
+par(mfrow = c(1, 1)) # Reset layout to default
 
 
 plot(SSE_out1)
@@ -817,7 +810,7 @@ lines(out6$h,out6$gcv, col = 8, lwd = 2)
 plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
      xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
 
-###Plotting the differet smoothing 
+### Plotting the differet smoothing 
 lines(st[,1], col = "red")
 par(mfrow = c(1,2))
 plot(out0$fdata.est[4,],col ="blue", lwd = 3)
@@ -825,7 +818,6 @@ points(st[,4], col = "red")
 
 plot(out3$fdata.est[4,],col ="blue", lwd = 3)
 points(st[,4], col = "red")
-
 
 
 ### Selected smoothing ###
