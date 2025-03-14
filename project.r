@@ -623,6 +623,28 @@ plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
 plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
 plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
 dev.off()
+getwd()
+#Download the plot
+png("sse_plot.png", width = 800, height = 600)
+
+plot(seq(-9, 9, len = 40), sse[1:40], type = 'l',
+     xlab = 'log(lambda)', ylab = 'SSE',
+     cex.lab = 1.5, lwd = 2, col = 'blue',
+     main = 'SSE vs. log(lambda)', cex.main = 1.8)
+grid()
+dev.off()
+
+png("gcv_plot.png", width = 800, height = 600)
+
+
+plot(seq(-9, 9, len = 40), gcv[1:40], type = 'l',
+     xlab = 'log(lambda)', ylab = 'GCV',
+     cex.lab = 1.5, lwd = 2, col = 'red',
+     main = 'GCV vs. log(lambda)', cex.main = 1.8)
+grid()
+
+dev.off()
+
 
 # Find optimal lambda
 optimal_lambda_index = which.min(gcv)
@@ -630,6 +652,7 @@ optimal_lambda = lambda_seq[optimal_lambda_index]
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
 basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+
 
 tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
 smooth <- smooth.basis(day,st,tD3fdPar)
@@ -767,15 +790,15 @@ boxplot(smooth.fd)
 
 ### Kernel smoothing
 >>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
-out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
-out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
+out1 <- optim.np(fdata_obj , type.S = S.NW, h = 3:50,par.CV = list(criteria = "GCV"))#Local regression
+out2 <- optim.np(fdata_obj, type.S = S.LLR,h = 3:50, par.CV = list(criteria = "GCV"))#Local kernel
 
-out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
-out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
-out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
-out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
+out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:50, Ker = Ker.norm) # Normal Kernel
+out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:50, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:50, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
+out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:50, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
 
-
+SSE_out0 <-sum((fdata_obj - out0$fdata.est )^2)
 SSE_out1 <-sum((fdata_obj - out1$fdata.est )^2)
 SSE_out2 <-sum((fdata_obj - out2$fdata.est )^2)
 SSE_out3 <-sum((fdata_obj - out3$fdata.est )^2)
@@ -789,20 +812,89 @@ gcv_values <- c(out0$gcv.opt, out1$gcv.opt, out2$gcv.opt, out3$gcv.opt,
                 out4$gcv.opt, out5$gcv.opt, out6$gcv.opt)
 
 # Define labels for each method
-methods <- c("out0", "out1", "out2", "out3", "out4", "out5", "out6")
+methods <- c("B-splines", "NW", "LR", "Normal ", "Triweight ", "Epanech.", "Uniform")
 
 # Plot GCV values
-barplot(gcv_values, names.arg = methods, col = "lightblue", main = "GCV Comparison",
-        ylab = "GCV Value", xlab = "Methods", las = 2)
+
+
+png("GCV_comparison_plot.png", width = 1200, height = 800)
+
+par(mar = c(5, 7, 4, 2) + 0.1)  # Adjust margins for better text spacing
+
+# Create the barplot without rotating labels
+bp <- barplot(gcv_values, names.arg = methods, col = "skyblue", 
+              main = "GCV Comparison by smoothing methods", 
+              ylab = "GCV Value", cex.names = 2, cex.lab = 2, cex.main = 3, 
+              ylim = c(0, max(gcv_values) * 1.1), border = "white")
+
+# Add horizontal grid lines for clarity
+grid(nx = NULL, ny = NULL, col = "gray90", lty = 2)
+
+
+dev.off()  
 
 # Compute Sum of Squared Errors (SSE) for each method
-sse_values <- c(SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
+sse_values <- c(SSE_out0, SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
 
 # Plot SSE values
-barplot(sse_values, names.arg = methods[-1], col = "lightcoral", main = "SSE Comparison",
-        ylab = "Sum of Squared Errors", xlab = "Methods", las = 2)
+png("SSE_comparison_plot.png", width = 1200, height = 800)
 
-par(mfrow = c(1, 1))  # Reset layout to default
+sse_values_adjusted <- sse_values[-1]  # Adjust SSE values if removing the first method
+methods_adjusted <- methods[-1]  # Adjust method names to match
+options(scipen = 999)
+# Improved plot for SSE values
+png("SSE_comparison_plot.png", width = 1200, height = 800)
+
+par(mar = c(5, 7, 4, 2) + 0.1)  # Adjust margins
+
+# Create the barplot without rotating labels
+bp_sse <- barplot(sse_values, names.arg = methods, col = "lightcoral", 
+                  main = "SSE Comparison by smoothing methods", 
+                  ylab = "Sum of Squared Errors", 
+                  cex.names = 2, cex.lab = 2, cex.main = 3, 
+                  ylim = c(0, max(sse_values) * 1.1), border = "white")
+
+# Add horizontal grid lines for better readability
+grid(nx = NULL, ny = NULL, col = "gray90", lty = 2)
+
+
+dev.off()  # Save the plot to file
+
+png("gcv_criteria_plot.png", width = 1200, height = 800)
+
+# Set plot margins and background for better visuals
+par(mar = c(5, 6, 4, 8) + 0.1, bg = "white")  # Increased right margin for space
+
+# Main plot with better aesthetics
+plot(out1$h, out1$gcv, type = "l",
+     main = "GCV Criteria",
+     xlab = "Bandwidth (h) Values",
+     ylab = "GCV Criteria",
+     col = "forestgreen", lwd = 3,
+     cex.lab = 1.8, cex.main = 2, cex.axis = 1.5)
+
+# Add grid lines for better clarity
+grid(lty = "dotted", col = "gray70")
+
+# Add additional lines with unique colors and styles
+lines(out2$h, out2$gcv, col = "royalblue", lwd = 3, lty = 2)
+lines(out3$h, out3$gcv, col = "darkorange", lwd = 3, lty = 3)
+lines(out4$h, out4$gcv, col = "purple", lwd = 3, lty = 4)
+lines(out5$h, out5$gcv, col = "firebrick", lwd = 3, lty = 5)
+lines(out6$h, out6$gcv, col = "goldenrod", lwd = 3, lty = 6)
+
+# Improved legend with larger text and custom position (left side)
+legend("left", inset = c(0.01, 0),
+       legend = c("Ker.norm-S.NW", "Ker.norm-S.LLR", 
+                  "Ker.norm-S.KNN", "Ker.tri-S.NW",
+                  "Ker.epa-S.NW", "Ker.unif-S.NW"),
+       col = c("forestgreen", "royalblue", "darkorange", 
+               "purple", "firebrick", "goldenrod"),
+       lwd = 3, lty = 1:6,
+       box.col = "white", cex = 2)
+
+# Close the graphics device to save the image
+dev.off()
 
 
 plot(SSE_out1)
@@ -831,12 +923,42 @@ plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ",
 ###Plotting the differet smoothing 
 lines(st[,1], col = "red")
 par(mfrow = c(1,2))
-plot(out0$fdata.est[4,],col ="blue", lwd = 3)
+plot(out0$fdata.est[1,],col ="blue", lwd = 3)
 points(st[,4], col = "red")
 
 plot(out3$fdata.est[4,],col ="blue", lwd = 3)
 points(st[,4], col = "red")
+par(opar)
+dev.off()
 
+png("B-splines fitted.png", width = 1200, height = 800)
+plot(out0$fdata.est[1,], col = "blue", lwd = 3, 
+     main = "B-splines fitted", 
+     xlab = "Time", ylab = "Price", 
+     cex.main = 3, cex.lab = 2, cex.axis = 2)
+
+# Add red points for the second data
+points(st[, 1], col = "red", cex = 2)
+dev.off()
+png("Normal kernel fitted.png", width = 1200, height = 800)
+plot(out3$fdata.est[1,], col = "blue", lwd = 3, 
+     main = "Normal kernel fitted", 
+     xlab = "Time", ylab = "Price", 
+     cex.main = 3, cex.lab = 2, cex.axis = 2)
+
+# Add red points for the second data
+points(st[, 1], col = "red", cex = 2)
+dev.off()
+
+png("Triweight kernel fitted.png", width = 1200, height = 800)
+plot(out4$fdata.est[1,], col = "blue", lwd = 3, 
+     main = "Normal kernel fitted", 
+     xlab = "Time", ylab = "Price", 
+     cex.main = 3, cex.lab = 2, cex.axis = 2)
+
+# Add red points for the second data
+points(st[, 1], col = "red", cex = 2)
+dev.off()
 
 
 ### Selected smoothing ###
@@ -848,14 +970,13 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 
 
 #PCA
-
 library(fda)
-
 nharm = 4
 pcalist = pca.fd(smooth$fd, nharm, centerfns = TRUE)
 plot(pcalist)
 plot(pcalist$harmonics)
 
+dev.off()
 plotscores(pcalist, loc = 5)
 
 fd.pca1.list <- list() 
@@ -883,7 +1004,8 @@ for(i in 1:5) {
     pcalist$scores[i,3]*pcalist$harmonics[3] +
     pcalist$scores[i,4]*pcalist$harmonics[4]
 }
-
+plot(mean.fd(smooth$fd) + pcalist$scores[1,1]*pcalist$harmonics[1])
+plot(mean.fd(smooth$fd))
 
 opar <- par(mfrow=c(2,2), ask = TRUE)
 for(i in 1:5) {
@@ -900,9 +1022,16 @@ for(i in 1:5) {
   lines(smooth$fd[i], col = 2)
 }
 par(opar)
+opar <- par(mfrow=c(2,2), ask = TRUE)
+plot(fd.pca1.list[[1]])
+lines(smooth$fd[1], col = 2)
 
+plot(fd.pca2.list[[1]])
+lines(smooth$fd[1])
+     
 varmx <- varmx.pca.fd(pcalist)
 plot(varmx)
+par(opar)
 
 plot(varmx$harmonics)
 
