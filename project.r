@@ -740,7 +740,6 @@ boxplot(smooth.fd)
 
 
 ### Kernel smoothing
->>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
 out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
 out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
 
