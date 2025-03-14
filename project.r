@@ -640,6 +640,28 @@ plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5) # shows how
 plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5) # measures fit quality
 plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5) # helps choose the best 𝜆(minimum GCV)
 dev.off()
+getwd()
+#Download the plot
+png("sse_plot.png", width = 800, height = 600)
+
+plot(seq(-9, 9, len = 40), sse[1:40], type = 'l',
+     xlab = 'log(lambda)', ylab = 'SSE',
+     cex.lab = 1.5, lwd = 2, col = 'blue',
+     main = 'SSE vs. log(lambda)', cex.main = 1.8)
+grid()
+dev.off()
+
+png("gcv_plot.png", width = 800, height = 600)
+
+
+plot(seq(-9, 9, len = 40), gcv[1:40], type = 'l',
+     xlab = 'log(lambda)', ylab = 'GCV',
+     cex.lab = 1.5, lwd = 2, col = 'red',
+     main = 'GCV vs. log(lambda)', cex.main = 1.8)
+grid()
+
+dev.off()
+
 
 # Find optimal lambda
 optimal_lambda_index = which.min(gcv)
@@ -649,6 +671,7 @@ optimal_lambda
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
 basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+
 
 tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
 smooth <- smooth.basis(day,st,tD3fdPar)
@@ -715,59 +738,99 @@ contour(day5time, day5time, logprec.varmat,
 
 boxplot(smooth.fd)
 
-lgp <- eval.fd(day, smooth.fd) # contains the function values evaluated at those specific days
-head(lgp)
 
-# band_depth() computes the band depth of the functional curves. 
-# Band depth measures the "centrality" of a curve relative to the 
-# other curves in the dataset. Curves with low depth are farther from 
-# the center of the group and might be considered outliers.
+### Kernel smoothing
+>>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
+out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
+out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
 
-bd <- band_depth(dt = t(lgp))
-names(bd) <- colnames(lgp)
-bd
-plot(bd, type="l")
+out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
+out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
+out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
 
 
-mbd <- modified_band_depth(t(lgp))
-names(mbd) <- colnames(lgp)
-mbd
-plot(mbd, type="l")
+SSE_out1 <-sum((fdata_obj - out1$fdata.est )^2)
+SSE_out2 <-sum((fdata_obj - out2$fdata.est )^2)
+SSE_out3 <-sum((fdata_obj - out3$fdata.est )^2)
+SSE_out4 <-sum((fdata_obj - out4$fdata.est )^2)
+SSE_out5 <-sum((fdata_obj - out5$fdata.est )^2)
+SSE_out6 <-sum((fdata_obj - out6$fdata.est )^2)
 
 
-fbplot_obj <- functional_boxplot(t(lgp), depth_method = "bd") # performs a functional boxplot using the band depth (BD) method for depth
-fbplot_obj$outliers # extracts the outliers identified by the functional boxplot
+# Combine GCV values into a vector
+gcv_values <- c(out0$gcv.opt, out1$gcv.opt, out2$gcv.opt, out3$gcv.opt, 
+                out4$gcv.opt, out5$gcv.opt, out6$gcv.opt)
 
-fbplot_obj <- functional_boxplot(t(lgp), depth_method = "mbd")
-fbplot_obj$outliers
+# Define labels for each method
+methods <- c("out0", "out1", "out2", "out3", "out4", "out5", "out6")
 
+# Plot GCV values
+barplot(gcv_values, names.arg = methods, col = "lightblue", main = "GCV Comparison",
+        ylab = "GCV Value", xlab = "Methods", las = 2)
 
-# muod() is a function that calculates functional depth using a 
-# method based on boxplots. It returns the detected outliers based on 
-# this calculation
-m <- muod(t(lgp), cut_method = c("boxplot"))
-m$outliers
+# Compute Sum of Squared Errors (SSE) for each method
+sse_values <- c(SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
 
-fbplot(lgp, method="BD2")
-# 10 25 27 28 40 53 61 are the indices of the curves identified as outliers
-# curve 10 (corresponding to FDX.Close) is considered an outlier, as are curves 25 (corresponding to WMT.Close), 27 (corresponding to SPOT.Close)
-# medcurve represents the curve with the median depth (i.e., the curve that is the most central in the set) --> in this case in Nike
+# Plot SSE values
+barplot(sse_values, names.arg = methods[-1], col = "lightcoral", main = "SSE Comparison",
+        ylab = "Sum of Squared Errors", xlab = "Methods", las = 2)
 
-### Interpretation:
-# The outliers are identified as curves with relatively low depth values, which deviate from the general trend of the other curves.
-# The median curve is the one that represents the "average" behavior of the data, with the highest depth.
+par(mfrow = c(1, 1))  # Reset layout to default
 
 
-fbplot(lgp, method="MBD")
+plot(SSE_out1)
+
+names(out1)
+
+contour(nb, l, out0$gcv, ylab = "Lambda", xlab = "Number of basis", 
+        main = "GCV criteria by optim.basis()")
+
+
+dev.new(width = 150, height = 110, units = "mm")
+plot(out1$h, out1$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
+     xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
+legend(x = 3, y = 6, legend = c("Ker.norm-S.NW", "Ker.norm-S.LLR", 
+                                  "Ker.norm-S.KNN", "Ker.tri-S.NW",
+                                  "Ker.epa-S.NW", "Ker.unif-S.NW"),
+       box.col = "white", lwd = c(2, 2, 2), col = c(3, 4, 5, 6, 7, 8),cex = 0.75)
+lines(out3$h,out3$gcv, col = 5, lwd = 2)
+lines(out4$h,out4$gcv, col = 6, lwd = 2)
+lines(out5$h,out5$gcv, col = 7, lwd = 2)
+lines(out6$h,out6$gcv, col = 8, lwd = 2)
+
+plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
+     xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
+
+###Plotting the differet smoothing 
+lines(st[,1], col = "red")
+par(mfrow = c(1,2))
+plot(out0$fdata.est[4,],col ="blue", lwd = 3)
+points(st[,4], col = "red")
+
+plot(out3$fdata.est[4,],col ="blue", lwd = 3)
+points(st[,4], col = "red")
 
 
 
-### Functional PCA
+### Selected smoothing ###
+
+basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
+smooth <- smooth.basis(day,st,tD3fdPar)
+
+
+
+#PCA
+
+library(fda)
+
 nharm = 4
 pcalist = pca.fd(smooth.fd, nharm, centerfns = TRUE) # first 4 principal components (nharm = 4), centered around the mean curve
 plot(pcalist)
 plot(pcalist$harmonics)
 
+plotscores(pcalist, loc = 5)
 
 fd.pca1.list <- list() 
 fd.pca2.list <- list() 
@@ -797,7 +860,8 @@ for(i in 1:5) {
     pcalist$scores[i,3]*pcalist$harmonics[3] +
     pcalist$scores[i,4]*pcalist$harmonics[4]
 }
-
+plot(mean.fd(smooth$fd) + pcalist$scores[1,1]*pcalist$harmonics[1])
+plot(mean.fd(smooth$fd))
 
 opar <- par(mfrow=c(2,2), ask = TRUE)
 for(i in 1:5) {
@@ -815,9 +879,9 @@ for(i in 1:5) {
 }
 par(opar)
 
-#### Rotation
 varmx <- varmx.pca.fd(pcalist)
 plot(varmx)
+par(opar)
 
 plot(varmx$harmonics)
 
