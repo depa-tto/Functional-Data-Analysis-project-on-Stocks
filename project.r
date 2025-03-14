@@ -950,10 +950,6 @@ mean_kernel <- plot(mean(out3$fdata.est))
 plot(out3$fdata.est, main = "Smoothed Functional Data")
 
 
-
-<<<<<<< HEAD
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
 
-=======
->>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
