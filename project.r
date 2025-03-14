@@ -633,10 +633,7 @@ optimal_lambda
 
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
-basis <- create.bspline.basis(c(1,776),nbasis= 39, norder = 4)
-smooth = smooth.basis(day, st,basis )
-
-smooth$fd
+basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
 
 tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
 smooth <- smooth.basis(day,st,tD3fdPar)
@@ -929,14 +926,34 @@ points(st[,4], col = "red")
 
 ### Selected smoothing ###
 
-out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
+basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
+smooth <- smooth.basis(day,st,tD3fdPar)
 
-str(out3)
-names(out3)
 
-plot(out3$h, out3$gcv, type = "b", pch = 19, col = "blue",
-     xlab = "Smoothing Parameter (h)", ylab = "GCV",
-     main = "Generalized Cross Validation Curve")
-abline(v = out3$h.opt, col = "red", lty = 2) 
-grid()
 
+#PCA
+out4
+library(fda)
+fd_obj <- fdata2fd(out4$fdata.est)
+nharm = 4
+pcalist = pca.fd(fd_obj, centerfns = TRUE)
+names(out4)
+
+str(fd_obj)
+class(fd_obj)
+
+plot(out3$fdata.est, main = "Smoothed Functional Data") # smoothed functions
+
+mean_kernel <- plot(mean(out3$fdata.est))
+
+plot(out3$fdata.est, main = "Smoothed Functional Data")
+
+
+
+<<<<<<< HEAD
+lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
+lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+
+=======
+>>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
