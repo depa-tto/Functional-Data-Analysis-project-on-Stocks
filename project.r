@@ -525,34 +525,42 @@ sum(is.na(st))
 
 # Euclidean depth
 
-dE <- depthEuclid(st, st)
+dE <- depthEuclid(st, st) # dE is the vector of depth values for each observation
 mdE <- which.max(dE)
+mdE # index of the maximum depth on dE
 dE[mdE] # euclidean depth of the deepest point in the dataset
 
 # a very small depth value (like this one) suggests that the dataset 
 # is highly spread out or has strong outliers, meaning even the "deepest" point is not very central.
 
 st[mdE,] # retrieves the most central (deepest) row from the dataset based on Euclidean Depth
+apply(st,2,median) # median of each column in the dataset
 
+# if st[mdE, ] and apply(st, 2, median) are close, the deepest point is 
+# near the median, suggesting symmetric distribution
+# If they differ significantly, the data might be skewed or have outliers
 
-apply(st,2,median)
 
 plot(st)
-points(st[mdE,1], st[mdE,2], pch=23, col="blue", bg="blue", lwd=2)
-points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
+points(st[mdE,1], st[mdE,2], pch=23, col="blue", bg="blue", lwd=5)
+points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=5)
+legend("topright", legend=c("Deepest Point", "Median Point"),
+       pch=c(23, 24), col=c("blue", "red"), pt.bg=c("blue", "red"), cex=1,horiz=TRUE)
 # red one is median point while the blue one is the deepest point, affected by outliers
 # if the blue (deepest) and red (median) points are close, the dataset is relatively symmetric and balanced.
 # if they are far apart, the dataset might have outliers or skewed distribution (the Euclidean Depth is influenced by the overall spread of the data)
 
 
+
+
 # Local depth
 dL <- depthLocal(st, st, depth_params1 = list(method = "LP"))
-dL
 mdL <- which.max(dL)
 dL[mdL]
 st[mdL,]
 
 depthContour(st[,1:2], depth_params = list(method = "Local", depth_params1 = list(method = "LP")))
+
 
 # MBD, Frainman-Muniz
 dMBD <- fncDepth(st, method = "MBD")
@@ -560,20 +568,27 @@ dFM <- fncDepth(st, method = "FM")
 mdMBD <- which.max(dMBD)
 mdFM <- which.max(dFM)
 
-dMBD[mdMBD]
-st[mdMBD,]
+dMBD[mdMBD] # deepest points
+st[mdMBD,] 
 
-dFM[mdFM]
+dFM[mdFM]  # deepest points
 st[mdFM,]
 
+# dMBD[mdMBD] and dFM[mdFM] display the depth values of the deepest points according 
+# to the MBD and FM methods.
+# st[mdMBD,] and st[mdFM,] display the actual data points corresponding to these deepest points
+
+
 plot(st)
-points(st[mdMBD,1], st[mdMBD,2], pch=23, col="blue", bg="blue", lwd=2)
-points(st[mdFM,1], st[mdFM,2], pch=23, col="green", bg="green", lwd=2)
-points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
+points(st[mdMBD,1], st[mdMBD,2], pch=23, col="blue", bg="blue", lwd=5)
+points(st[mdFM,1], st[mdFM,2], pch=23, col="green", bg="green", lwd=5)
+points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=5)
 
 fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
-
+# These lines compute the median depth for the data using MBD and FM methods. 
+# This gives a central point based on each depth method, similar to calculating 
+# the median of the dataset but based on depth rather than simple averaging.
 
 ### B-splines
 st <- as.matrix(st)
