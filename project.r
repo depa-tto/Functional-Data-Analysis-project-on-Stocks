@@ -526,6 +526,7 @@ sum(is.na(st))
 # Euclidean depth
 
 dE <- depthEuclid(st, st) # dE is the vector of depth values for each observation
+dE
 mdE <- which.max(dE)
 mdE # index of the maximum depth on dE
 dE[mdE] # euclidean depth of the deepest point in the dataset
@@ -578,7 +579,7 @@ st[mdFM,]
 # to the MBD and FM methods.
 # st[mdMBD,] and st[mdFM,] display the actual data points corresponding to these deepest points
 
-
+dev.off()
 plot(st)
 points(st[mdMBD,1], st[mdMBD,2], pch=23, col="blue", bg="blue", lwd=5)
 points(st[mdFM,1], st[mdFM,2], pch=23, col="green", bg="green", lwd=5)
@@ -691,43 +692,47 @@ smooth.fd = smooth$fd
 
 plot(smooth.fd)
 
+# Calculate mean and standard deviation
 b_spline_mean = mean.fd(smooth.fd)
 b_spline_sd = std.fd(smooth.fd)
 
+# Plot the mean and standard deviation lines
 lines(b_spline_mean, lwd=4, lty=2, col=2)
 lines(b_spline_sd, lwd=4, lty=2, col=4)
 
+# Plot the mean ± SD and mean ± 2SD lines
 lines(b_spline_mean-b_spline_sd, lwd=4, lty=2, col=6)
 lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
 
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
 
+# Add the legend
+legend("topright", 
+       legend=c("Mean", "SD", "Mean ± SD", "Mean ± 2SD"),
+       col=c(2, 4, 6, 8), 
+       lty=4, 
+       lwd=6, 
+       box.lwd=3,
+      cex=2)
 
 # the Bivariate Covariance Function v(s; t)
 # this function captures how the variability of the smoothed functional data changes over time
 
 logprecvar.bifd = var.fd(smooth.fd)
 
-weektime = seq(1,756,length=108) # 108 evenly spaced points between days 1 and 756(approximating weekly intervals)
-logprecvar_mat = eval.bifd(weektime, weektime,logprecvar.bifd)
+# Contour plot every 5 days
 
-persp(weektime, weektime, logprecvar_mat,
+day5time = seq(1,756,5)
+logprec.varmat = eval.bifd(day5time, day5time,logprecvar.bifd)
+
+persp(day5time, day5time, logprecvar_mat,
       theta=-45, phi=25, r=3, expand = 0.5,
       ticktype='detailed',
       xlab="Day",
       ylab="Day",
       zlab="variance(log10 precip)")
 
-
-contour(weektime, weektime, logprecvar_mat,
-        xlab="Day",
-        ylab="Day")
-
-# Contour plot every 5 days
-
-day5time = seq(1,756,5)
-logprec.varmat = eval.bifd(day5time, day5time,logprecvar.bifd)
 
 contour(day5time, day5time, logprec.varmat,
         xlab="Day",
@@ -823,6 +828,7 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 #PCA
 
 library(fda)
+
 
 nharm = 4
 pcalist = pca.fd(smooth.fd, nharm, centerfns = TRUE) # first 4 principal components (nharm = 4), centered around the mean curve
