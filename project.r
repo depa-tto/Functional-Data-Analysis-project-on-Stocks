@@ -403,7 +403,7 @@ Bayer <- getSymbols("BAYN.DE", src = "yahoo", from = "2020-01-01", to = "2022-12
 Bayer <- Bayer$BAYN.DE.Close
 head(Bayer)
 
-
+Bayer
 AstraZeneca <- getSymbols("AZN", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 AstraZeneca <- AstraZeneca$AZN.Close
 head(AstraZeneca)
@@ -443,8 +443,77 @@ file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functiona
 # write.csv(healthcare_stocks, file_path, row.names = FALSE)
 library(ggplot2)
 
+it_stocks <- data.frame(it_stocks)
+automobile_stocks <- data.frame(automobile_stocks)
+fashion_stocks <- data.frame(fashion_stocks)
+healthcare_stocks <- data.frame(healthcare_stocks)
+food_stoks <- data.frame(food_stoks)
+oil_stocks <- data.frame(oil_stocks)
+travel_stocks<-data.frame(travel_stocks)
+logistics_stocks <- data.frame(logistics_stocks)
 
+it_stocks$date <- as.Date(rownames(it_stocks))
+automobile_stocks$date <- as.Date(rownames(automobile_stocks))
+fashion_stocks$date <- as.Date(rownames(fashion_stocks))
+healthcare_stocks$date <- as.Date(rownames(healthcare_stocks))
+food_stoks$date <- as.Date(rownames(food_stoks))
+oil_stocks$date <- as.Date(rownames(oil_stocks))
+travel_stocks$date <- as.Date(rownames(travel_stocks))
+logistics_stocks$date <- as.Date(rownames(logistics_stocks))
+
+stock_list <- list(it_stocks, automobile_stocks, fashion_stocks, healthcare_stocks, 
+                   food_stoks, oil_stocks, travel_stocks, logistics_stocks)
+
+# Merge all datasets by 'date'
+
+start_date <- as.Date("2020-01-01")
+end_date <- as.Date("2022-12-31")
+all_stocks[3,]
+# Generate all Fridays within the date range
+all_dates <- seq(from = start_date, to = end_date, by = "day")
+
+# Filter to only Fridays
+fridays <- all_dates[weekdays(all_dates) == "Friday"]
+
+all_stocks_xts <- xts(all_stocks[,-1], order.by = all_stocks$date)
+
+# Create an empty xts object with Fridays
+friday_xts <- xts(, order.by = fridays)
+
+# Merge and fill missing values with the last observation
+weekly_stocks <- merge(all_stocks_xts, friday_xts, all = TRUE)
+
+# Fill forward and backward to handle all NAs
+weekly_stocks <- na.locf(weekly_stocks, fromLast = FALSE)  # Forward fill (Thursday, Wednesday, etc.)
+weekly_stocks <- na.locf(weekly_stocks, fromLast = TRUE)   # Backward fill for leading NAs
+
+# Keep only the rows aligned to Fridays
+weekly_stocks <- weekly_stocks[fridays]
+
+# Verify the data
+head(weekly_stocks)
+nrow(weekly_stocks)
+sum(is.na(weekly_stocks))
+weekly_stocks_df <- data.frame(date = index(weekly_stocks), coredata(weekly_stocks))
+
+getwd()
+# Save the dataset
+write.csv(weekly_stocks_df, "weekly_stock_prices_cleaned.csv", row.names = FALSE)
+
+st <- weekly_stocks_df
+# Check for any remaining missing values
+sum(is.na(weekly_stocks_df))
+
+# Check the result
+head(weekly_stocks_df)
+# Check the weekly datas
+# Check the merged dataset
+head(all_stocks)
+dim(all_stocks)
+all_stocks[,2]
+colnames(all_stocks)
 # your file_path
+
 path <- getwd()
 path
 setwd(file.path(getwd(), "data_stocks"))
@@ -484,10 +553,16 @@ library(httr)
 # Read the file
 path <- getwd()
 setwd(file.path(getwd(), "data_stocks"))
-st <- read.csv("final_data.csv")
+st <- read.csv("weekly_stock_prices_cleaned.csv")
 head(st)
 sum(is.na(st))
-
+#Data preprocessing
+st <- st[, -1]
+log_returns <- apply(st, 2, function(x) c(diff(log(x))))
+st <- 100*log_returns
+st <- data.frame(st)
+dim(log_returns)
+#
 # Visualize stocks for IT
 opar <- par(mfrow=c(2,2))
 plot(st$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
@@ -510,6 +585,7 @@ plot(st$GOOG.Close, type="l", col="purple", lwd=2, xlab="", ylab="GOOG Close",
      main="GOOG Close Prices")
 
 dev.off()
+
 
 
 # Depth analysis before smoothing
@@ -576,14 +652,15 @@ library(fda)
 library(fda.usc)
 
 ### B-splines
+dim(st)
 st <- as.matrix(st)
-day <- c(1:756)
+day <- c(1:156)
 
 nrow(st)
 # Create a grid for lambda and number of basis
 l <- c(0 ,2^seq(-9, 9, len = 40))
 nb <- seq(7, 40, by = 2)
-time_points <- 1:756
+time_points <- 1:156
 # Create functional ojects with argumen values
 fdata_obj <- fdata(t(st), argvals = time_points)
 
@@ -591,7 +668,7 @@ fdata_obj <- fdata(t(st), argvals = time_points)
 # Smooth with B-splines
 out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
 sum((fdata_obj$data - out0$fdata.est)^2)
-basis <- create.bspline.basis(c(1,756),nbasis= out0$numbasis.opt, norder = 4)
+basis <- create.bspline.basis(c(1,156),nbasis= 30, norder = 4)
 
 out0$fdata.est # the smoothed functional data
 out0$numbasis.opt # the optimal number of basis functions
@@ -651,13 +728,18 @@ optimal_lambda_index = which.min(gcv)
 optimal_lambda = lambda_seq[optimal_lambda_index]
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
-basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+basis <- create.bspline.basis(c(1,156),nbasis= 7, norder = 4)
 
 
-tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=optimal_lambda)
 smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
-plot(smooth)
+plot(smooth$fd)
+par()
+dev.off()
+fitted<- eval.fd(1:156, smooth$fd)
+plot(st[,3])
+lines(fitted[,3])
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -932,13 +1014,13 @@ par(opar)
 dev.off()
 
 png("B-splines fitted.png", width = 1200, height = 800)
-plot(out0$fdata.est[1,], col = "blue", lwd = 3, 
+plot(out0$fdata.est[2,], col = "blue", lwd = 3, 
      main = "B-splines fitted", 
      xlab = "Time", ylab = "Price", 
      cex.main = 3, cex.lab = 2, cex.axis = 2)
 
 # Add red points for the second data
-points(st[, 1], col = "red", cex = 2)
+points(st[, 2], col = "red", cex = 2)
 dev.off()
 png("Normal kernel fitted.png", width = 1200, height = 800)
 plot(out3$fdata.est[1,], col = "blue", lwd = 3, 
@@ -947,17 +1029,17 @@ plot(out3$fdata.est[1,], col = "blue", lwd = 3,
      cex.main = 3, cex.lab = 2, cex.axis = 2)
 
 # Add red points for the second data
-points(st[, 1], col = "red", cex = 2)
+points(st[, 2], col = "red", cex = 2)
 dev.off()
 
 png("Triweight kernel fitted.png", width = 1200, height = 800)
-plot(out4$fdata.est[1,], col = "blue", lwd = 3, 
-     main = "Normal kernel fitted", 
+plot(out4$fdata.est[2,], col = "blue", lwd = 3, 
+     main = "Triweight kernel fitted", 
      xlab = "Time", ylab = "Price", 
      cex.main = 3, cex.lab = 2, cex.axis = 2)
 
 # Add red points for the second data
-points(st[, 1], col = "red", cex = 2)
+points(st[, 2], col = "red", cex = 2)
 dev.off()
 
 
@@ -971,10 +1053,19 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 
 #PCA
 library(fda)
-nharm = 4
+nharm = 6
 pcalist = pca.fd(smooth$fd, nharm, centerfns = TRUE)
 plot(pcalist)
 plot(pcalist$harmonics)
+
+for (i in 1:6) {
+  png(paste0("pca_plot_", i, ".png"), width = 800, height = 600)
+  plot(pcalist, harm = i, cex = 2,cex.lab = 2,    # Axis labels
+       cex.axis = 1.5, # Axis tick labels
+       cex.main = 2,   # Main title
+       cex.sub = 1.5)  # 'harm' specifies which component to plot
+  dev.off()
+}
 
 dev.off()
 plotscores(pcalist, loc = 5)
@@ -1031,10 +1122,21 @@ lines(smooth$fd[1])
      
 varmx <- varmx.pca.fd(pcalist)
 plot(varmx)
-par(opar)
+par(mfrow= c(2,3))
+for (i in 1:6) {
+  png(paste0("varimx_plot_", i, ".png"), width = 1000, height = 800)
+  plot(varmx, harm = i, cex = 2,cex.lab = 2,    # Axis labels
+       cex.axis = 1.5, # Axis tick labels
+       cex.main = 2,   # Main title
+       cex.sub = 1.5)
+  dev.off()
+}
 
 plot(varmx$harmonics)
 
+png("harmonics_plot.png")  # Save as PNG
+plot(varmx$harmonics)
+dev.off()
 plotscores(varmx, loc = 5)
 
 fd.vrm1.list <- list() 
@@ -1055,12 +1157,6 @@ for(i in 1:5) {
     varmx$scores[i,1]*varmx$harmonics[1] + 
     varmx$scores[i,2]*varmx$harmonics[2] +
     varmx$scores[i,3]*varmx$harmonics[3] 
-  
-  fd.vrm4.list[[i]]<- mean.fd(smooth$fd) +
-    varmx$scores[i,1]*varmx$harmonics[1] + 
-    varmx$scores[i,2]*varmx$harmonics[2] +
-    varmx$scores[i,3]*varmx$harmonics[3] +
-    varmx$scores[i,4]*varmx$harmonics[4]
 }
 
 opar <- par(mfrow=c(2,2), ask = TRUE)
@@ -1073,11 +1169,32 @@ for(i in 1:5) {
   
   plot(fd.vrm3.list[[i]], ylim=c(-1, 1), ylab = "3 PC")
   lines(smooth$fd[i], col = 2)
-  
-  plot(fd.vrm4.list[[i]], ylim=c(-1, 1), ylab = "4 PC")
-  lines(smooth$fd[i], col = 2)
 }
 par(opar)
+
+for (i in 1:5) {
+  # Set the output to a PNG file (you can also use pdf(), jpeg(), etc.)
+  png(paste0("reconstruction_", i, ".png"), width = 1200, height = 900)
+  
+  # Save 2x2 grid of plots
+  par(mfrow = c(2, 2)) 
+  
+  # 1 PC Reconstruction
+  plot(fd.vrm1.list[[i]], ylim = c(-1, 1), ylab = "1 PC")
+  lines(smooth$fd[i], col = 2)
+  
+  # 2 PC Reconstruction
+  plot(fd.vrm2.list[[i]], ylim = c(-1, 1), ylab = "2 PC")
+  lines(smooth$fd[i], col = 2)
+  
+  # 3 PC Reconstruction
+  plot(fd.vrm3.list[[i]], ylim = c(-1, 1), ylab = "3 PC")
+  lines(smooth$fd[i], col = 2)
+  
+  # Close the current image file
+  dev.off()
+}
+
 
 
 
