@@ -285,7 +285,7 @@ file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functiona
 spotify <- getSymbols("SPOT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 spotify <- spotify$SPOT.Close
 head(spotify)
-
+spotify[c(1,7),]
 
 netflix <- getSymbols("NFLX", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 netflix <- netflix$NFLX.Close
@@ -527,19 +527,13 @@ food <- read.csv("food_stoks.csv")
 oil<- read.csv("oil_stocks.csv")
 travel <- read.csv("travel_stocks.csv")
 logistics <- read.csv("logistics_stocks.csv")
+st[,1]
 
-# exclude rows for stocks higher than 756
-logistics <-logistics[1:756,]
-it <- it[1:756,]
-automobile <- automobile[1:756,]
-fashion <- fashion[1:756,]
-healthcare <- healthcare[1:756,]
-food <- food[1:756,]
-oil <- oil[1:756,]
-travel <- oil[1:756,]
 # merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
 # save the final file
+st[,1]
+spotify
 write.csv(st, file = "final_data.csv", row.names = FALSE)
 
 ########################################################################## start ur code from here ##########################################################################
@@ -555,6 +549,7 @@ path <- getwd()
 setwd(file.path(getwd(), "data_stocks"))
 st <- read.csv("weekly_stock_prices_cleaned.csv")
 head(st)
+
 sum(is.na(st))
 #Data preprocessing
 st <- st[, -1]
@@ -562,7 +557,14 @@ log_returns <- apply(st, 2, function(x) c(diff(log(x))))
 st <- 100*log_returns
 st <- data.frame(st)
 dim(log_returns)
-#
+png("After_log.png", width = 1000, height = 800)
+plot(st$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
+     main="SPOT Close Prices After Transformation", cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+dev.off()
+
 # Visualize stocks for IT
 opar <- par(mfrow=c(2,2))
 plot(st$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
@@ -589,7 +591,8 @@ dev.off()
 
 
 # Depth analysis before smoothing
-
+install.packages("DepthProc")
+install.packages("MultiRNG")
 library(DepthProc)
 library(MultiRNG)
 
@@ -638,12 +641,40 @@ st[mdMBD,]
 
 dFM[mdFM]
 st[mdFM,]
+png("depth.png", width = 1000, height = 800)
+matplot(t(st), type = "l", lty = 1, col = "gray",
+        xlab = "Week", ylab = "Stock Value",
+        main = "Stock Curves with Most Central (FM) Highlighted")
 
+# Overlay the most central stock's curve in red
+lines(st[mdFM, ], col = "red", lwd = 2)
+dev.off()
 plot(st)
-points(st[mdMBD,1], st[mdMBD,2], pch=23, col="blue", bg="blue", lwd=2)
-points(st[mdFM,1], st[mdFM,2], pch=23, col="green", bg="green", lwd=2)
-points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
+points(st[mdMBD,5], st[mdMBD,6], pch=23, col="blue", bg="blue", lwd=2)
+points(st[mdFM,5], st[mdFM,6], pch=23, col="green", bg="green", lwd=2)
+points(median(st[,5]), median(st[,6]), pch=24, col="red", bg="red", lwd=2)
 
+png("Friman.png", width = 800, height = 600)
+
+# Plot the data in st (this will use the default plot method for a matrix)
+plot(st, main = "Stock Data with Depth", cex.main = 2)
+
+# Add a blue point for the most central stock (by MBD) using columns 3 and 4.
+points(st[mdFM,5], st[mdFM,6], pch=23, col="blue", bg="blue", lwd=2)
+
+# Add a red point for the coordinate-wise median of columns 3 and 4.
+points(median(st[, 3]), median(st[, 4]), pch = 24, col = "red", bg = "red", lwd = 2)
+
+# Add a legend to the top right corner
+legend("topright", 
+       legend = c("Friman-Munith depth", "Median"), 
+       pch = c(23, 24), 
+       col = c("blue", "red"), 
+       pt.bg = c("blue", "red"), 
+       lwd = 2,cex = 1.6)
+
+# Close the device to save the file.
+dev.off()
 fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
 
@@ -668,7 +699,7 @@ fdata_obj <- fdata(t(st), argvals = time_points)
 # Smooth with B-splines
 out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
 sum((fdata_obj$data - out0$fdata.est)^2)
-basis <- create.bspline.basis(c(1,156),nbasis= 30, norder = 4)
+basis <- create.bspline.basis(c(1,156),nbasis= out0$numbasis.opt, norder = 4)
 
 out0$fdata.est # the smoothed functional data
 out0$numbasis.opt # the optimal number of basis functions
@@ -751,6 +782,12 @@ dim(t(st))
 SSE <-sum((st - t(out0$fdataobj$data))^2)
 st[1,]
 
+png("B-splines.png",width = 1000, height = 800)
+plot(smooth$fd, lwd = 2,main = 'B-splines fiited', cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+dev.off()
 
 
 <<<<<<< HEAD
@@ -765,20 +802,66 @@ st[1,]
 
 # EDA and outliers detection for b-spline
 smooth.fd = smooth$fd
-
+dev.off()
 plot(smooth.fd)
+D1 <- deriv.fd(smooth.fd, deriv = 1)
+D2 <- deriv.fd(smooth.fd, deriv = 2)
+plot(D1)
+plot(D2)
+png("first_derivative.png", width = 1200, height = 800)
 
+plot(D1, , lwd = 2, main = "First Derivative",
+     xlab = "Time", ylab = "First Derivative Value",cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+
+legend("topright", legend = "First Derivative", col = "blue", lwd = 2)
+
+dev.off()  # Close the device to save the plot
+
+# 2. Save Second Derivative Plot
+png("second_derivative.png", width = 1200, height = 800)
+
+plot(D2, lwd = 2, main = "Second Derivative",
+     xlab = "Time", ylab = "Second Derivative Value",cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+
+
+dev.off()  # Close the device to save the plot
 b_spline_mean = mean.fd(smooth.fd)
 b_spline_sd = std.fd(smooth.fd)
+plot(smooth.fd)
+b_spline_mean = mean.fd(smooth.fd)
+lines(b_spline_mean, lwd=3, lty=2, col=2)
+b_spline_mean <- mean.fd(smooth.fd)
 
-lines(b_spline_mean, lwd=4, lty=2, col=2)
-lines(b_spline_sd, lwd=4, lty=2, col=4)
+# Open a graphics device to save the plot (e.g., PNG)
+png("functional_data_plot_large_text.png", width = 1200, height = 900)
 
-lines(b_spline_mean-b_spline_sd, lwd=4, lty=2, col=6)
-lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
+# Plot the smooth.fd object with larger text sizes
+plot(smooth.fd, main = "Functional Data with Mean Curve", 
+     cex.main = 3,      # Title text size
+     cex.lab = 2.5,     # Axis labels size
+     cex.axis = 2)      # Axis tick labels size
 
-lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
-lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+# Add the mean curve with specified line width, type, and color
+lines(b_spline_mean, lwd = 5, lty = 2, col = 2)
+
+# Add a legend with larger text
+legend("topright", legend = c("Smooth Data", "Mean Curve"),
+       col = c(1, 2), lty = c(1, 2), lwd = c(3, 5),
+       cex = 2) # Legend text size
+
+# Close the graphics device
+dev.off()
+
+lines(b_spline_mean-b_spline_sd, lwd=3, lty=2, col=6)
+lines(b_spline_mean+b_spline_sd, lwd=3, lty=2, col=6)
+dev.off()
+
 
 
 # the Bivariate Covariance Function v(s; t)
@@ -787,31 +870,42 @@ logprecvar.bifd = var.fd(smooth.fd)
 
 print(range(logprecvar.bifd$argvals))
 
-weektime = seq(1,756,length=53)
+time = seq(1,156, length = 36)
 logprecvar_mat = eval.bifd(weektime, weektime,
                             logprecvar.bifd)
 
 persp(weektime, weektime, logprecvar_mat,
-      theta=-45, phi=25, r=3, expand = 0.5,
+      theta=-20, phi=20, r=3, expand = 0.5,
       ticktype='detailed',
-      xlab="Day",
-      ylab="Day",
-      zlab="variance(log10 precip)")
+      xlab="Week",
+      ylab="Week",
+      zlab="variance")
+png("Variance_perspective.png", width = 1200, height = 1000)
 
+# Create the perspective plot
+persp(weektime, weektime, logprecvar_mat,
+      theta = -20, phi = 20, r = 3, expand = 0.5,
+      ticktype = 'detailed',
+      xlab = "Week",
+      ylab = "Week",
+      zlab = "variance",labcex=2)
+
+# Close the device to finalize and save the file
+dev.off()
 
 contour(weektime, weektime, logprecvar_mat,
         xlab="Day",
         ylab="Day")
 
-
-day5time = seq(1,365,5)
+png("Coontour.png", width = 1200, height = 1000)
+day5time = seq(1,156)
 logprec.varmat = eval.bifd(day5time, day5time,
                            logprecvar.bifd)
 contour(day5time, day5time, logprec.varmat,
         xlab="Day",
-        ylab="Day", lwd=2,
-        labcex=1)
-
+        ylab="Day", lwd=2.2,
+        labcex=2)
+dev.off()
 
 ### Descriptive measures for functional data.
 
@@ -966,7 +1060,7 @@ lines(out5$h, out5$gcv, col = "firebrick", lwd = 3, lty = 5)
 lines(out6$h, out6$gcv, col = "goldenrod", lwd = 3, lty = 6)
 
 # Improved legend with larger text and custom position (left side)
-legend("left", inset = c(0.01, 0),
+legend("topright", inset = c(0.01, 0),
        legend = c("Ker.norm-S.NW", "Ker.norm-S.LLR", 
                   "Ker.norm-S.KNN", "Ker.tri-S.NW",
                   "Ker.epa-S.NW", "Ker.unif-S.NW"),
