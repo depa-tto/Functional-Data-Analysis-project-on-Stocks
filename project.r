@@ -772,8 +772,6 @@ fitted<- eval.fd(1:156, smooth$fd)
 plot(st[,3])
 lines(fitted[,3])
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 
 plot(out0$fdataobj)
 names(out0$fdataobj)
@@ -789,16 +787,7 @@ plot(smooth$fd, lwd = 2,main = 'B-splines fiited', cex = 2,cex.lab = 1.8,    # A
      cex.sub = 2)
 dev.off()
 
-
-<<<<<<< HEAD
-=======
-
-
->>>>>>> parent of 7cf9c51 (Kernel updated)
-=======
->>>>>>> 70544f7541eccaec1306643b96303d22992ef2d8
 #Kernel smoothing
-=======
 
 # EDA and outliers detection for b-spline
 smooth.fd = smooth$fd
@@ -965,7 +954,7 @@ boxplot(smooth.fd)
 
 
 ### Kernel smoothing
->>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
+
 out1 <- optim.np(fdata_obj , type.S = S.NW, h = 3:50,par.CV = list(criteria = "GCV"))#Local regression
 out2 <- optim.np(fdata_obj, type.S = S.LLR,h = 3:50, par.CV = list(criteria = "GCV"))#Local kernel
 
@@ -1291,10 +1280,5 @@ for (i in 1:5) {
 
 
 
-
-<<<<<<< HEAD
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
-
-=======
->>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
