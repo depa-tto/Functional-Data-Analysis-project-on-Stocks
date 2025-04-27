@@ -543,6 +543,8 @@ library(tidyverse)
 library(dplyr)
 library(zoo)
 library(httr)
+library(DepthProc)
+library(MultiRNG)
 
 # Read the file
 path <- getwd()
@@ -591,10 +593,6 @@ dev.off()
 
 
 # Depth analysis before smoothing
-install.packages("DepthProc")
-install.packages("MultiRNG")
-library(DepthProc)
-library(MultiRNG)
 
 st <- as.matrix(st)
 sum(is.na(st))
@@ -787,8 +785,6 @@ plot(smooth$fd, lwd = 2,main = 'B-splines fiited', cex = 2,cex.lab = 1.8,    # A
      cex.sub = 2)
 dev.off()
 
-#Kernel smoothing
-
 # EDA and outliers detection for b-spline
 smooth.fd = smooth$fd
 dev.off()
@@ -894,58 +890,6 @@ contour(day5time, day5time, logprec.varmat,
         xlab="Day",
         ylab="Day", lwd=2.2,
         labcex=2)
-dev.off()
-
-### Descriptive measures for functional data.
-
-library(fda.usc)
-data(poblenou)
-nox <- poblenou$nox
-working <- poblenou$nox[poblenou$df$day.festive == 0 &
-                          as.integer(poblenou$df$day.week) < 6]
-nonworking <- poblenou$nox[poblenou$df$day.festive == 1 |
-                             as.integer(poblenou$df$day.week) > 5]
-
-# Centrality measures (working)
-
-par( mfrow=c(2, 2) )
-plot(func.mean(working), ylim = c(10, 170),
-     main = "Centrality measures in working days")
-legend(x = 11, y = 170, cex = 1, box.col = "white", lty = 1:5,
-       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
-                                "median.mode","median.RP"))
-lines(func.trim.mode(working, trim = 0.15), col = 2, lty = 2)
-lines(func.trim.RP(working, trim = 0.15), col = 3, lty = 3)
-lines(func.med.mode(working, trim = 0.15), col = 4, lty = 4)
-lines(func.med.RP(working, trim = 0.15), col = 5, lty = 5)
-
-# Centrality measures (non-working)
-plot(func.mean(nonworking), ylim = c(10,170),
-     main = "Centrality measures in non-working days")
-legend(x = 11, y = 170, cex = 1, box.col = "white",lty = 1:5,
-       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
-                                "median.mode","median.RP"))
-lines(func.trim.mode(nonworking, trim = 0.15),col = 2, lty = 2)
-lines(func.trim.RP(nonworking, trim = 0.15),col = 3, lty = 3)
-lines(func.med.mode(nonworking, trim = 0.15),col = 4, lty = 4)
-lines(func.med.RP(nonworking, trim = 0.15),col = 5, lty = 5)
-
-# Measures of dispersion   (working)
-plot(func.var(working),
-     main = "Dispersion measures in working days", ylim = c(100 ,5500))
-legend(x = 11, y = 5300,cex = 1, box.col = "white", lty = 1:3, col = 1:3,
-       legend = c("var", "trimvar.mode", "trimvar.RP"))
-lines(func.trimvar.mode(working,trim = 0.15), col = 2, lty = 2)
-lines(func.trimvar.RP(working,trim = 0.15), col = 3, lty = 3)
-
-# Measures of dispersion   (non-working)
-plot(func.var(nonworking),
-     main = "Dispersion measures in non-working days", ylim = c(100, 5500))
-legend(x = 11, y = 5300, cex = 1, box.col = "white", lty = 1:3, col = 1:3,
-       legend = c("var", "trimvar.mode", "trimvar.RP"))
-lines(func.trimvar.mode(nonworking, trim = 0.15), col = 2, lty = 2)
-lines(func.trimvar.RP(nonworking, trim = 0.15), col = 3, lty = 3)
-
 dev.off()
 
 ### boxplot
@@ -1085,7 +1029,7 @@ lines(out6$h,out6$gcv, col = 8, lwd = 2)
 plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
      xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
 
-###Plotting the differet smoothing 
+### Plotting the differet smoothing 
 lines(st[,1], col = "red")
 par(mfrow = c(1,2))
 plot(out0$fdata.est[1,],col ="blue", lwd = 3)
@@ -1126,7 +1070,7 @@ points(st[, 2], col = "red", cex = 2)
 dev.off()
 
 
-### Selected smoothing ###
+############### Selected smoothing ###############
 
 basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
 tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
@@ -1278,7 +1222,34 @@ for (i in 1:5) {
   dev.off()
 }
 
-
-
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+
+
+############### Clustering ###############
+
+library(funFEM)
+# Clustrering with FunFEM
+res_v = funFEM(smooth$fd,K=5,model="AkjBk",init="kmeans",lambda=0,disp=TRUE)
+
+# Visualization
+fdmeans_v = smooth$fd
+fdmeans_v$coefs = t(res_v$prms$my)
+plot(fdmeans_v,lwd=2,lty=1)
+axis(1,at=seq(5,181,6),labels=velov$dates[seq(5,181,6)],las=2)
+
+# Choice of K (may take a long time!)
+res_v2 = funFEM(fdobj_v,K=2:20,model='AkjBk',init='kmeans',lambda=0,disp=TRUE)
+res_v2$allCriterions
+plot(res_v2$allCriterions$K,res_v2$allCriterions$bic,type='b',xlab='K',main='BIC')
+res_v2$cls
+
+#par(mfrow=c(1,1))
+plot(t(fdobj_v$coefs) %*% res_v2$U,col=res$cls,pch=19,main="Discriminative space")
+text(t(fdobj_v$coefs) %*% res_v2$U)
+
+plot(fdobj_v[1:20], col=res_v2$cls[1:20], lwd=2, lty=1)
+
+fdmeans_v2 = fdobj_v
+fdmeans_v2$coefs = t(res_v2$prms$my)
+plot(fdmeans_v2, col=1:max(res_v2$cls), lwd=2)
