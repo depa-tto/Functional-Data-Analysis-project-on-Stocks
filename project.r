@@ -285,7 +285,7 @@ file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functiona
 spotify <- getSymbols("SPOT", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 spotify <- spotify$SPOT.Close
 head(spotify)
-
+spotify[c(1,7),]
 
 netflix <- getSymbols("NFLX", src = "yahoo", from="2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 netflix <- netflix$NFLX.Close
@@ -403,7 +403,7 @@ Bayer <- getSymbols("BAYN.DE", src = "yahoo", from = "2020-01-01", to = "2022-12
 Bayer <- Bayer$BAYN.DE.Close
 head(Bayer)
 
-
+Bayer
 AstraZeneca <- getSymbols("AZN", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 AstraZeneca <- AstraZeneca$AZN.Close
 head(AstraZeneca)
@@ -443,8 +443,77 @@ file_path <- "C:/Users/adepa/OneDrive/Desktop/Functional Data Analysis/Functiona
 # write.csv(healthcare_stocks, file_path, row.names = FALSE)
 library(ggplot2)
 
+it_stocks <- data.frame(it_stocks)
+automobile_stocks <- data.frame(automobile_stocks)
+fashion_stocks <- data.frame(fashion_stocks)
+healthcare_stocks <- data.frame(healthcare_stocks)
+food_stoks <- data.frame(food_stoks)
+oil_stocks <- data.frame(oil_stocks)
+travel_stocks<-data.frame(travel_stocks)
+logistics_stocks <- data.frame(logistics_stocks)
 
+it_stocks$date <- as.Date(rownames(it_stocks))
+automobile_stocks$date <- as.Date(rownames(automobile_stocks))
+fashion_stocks$date <- as.Date(rownames(fashion_stocks))
+healthcare_stocks$date <- as.Date(rownames(healthcare_stocks))
+food_stoks$date <- as.Date(rownames(food_stoks))
+oil_stocks$date <- as.Date(rownames(oil_stocks))
+travel_stocks$date <- as.Date(rownames(travel_stocks))
+logistics_stocks$date <- as.Date(rownames(logistics_stocks))
+
+stock_list <- list(it_stocks, automobile_stocks, fashion_stocks, healthcare_stocks, 
+                   food_stoks, oil_stocks, travel_stocks, logistics_stocks)
+
+# Merge all datasets by 'date'
+
+start_date <- as.Date("2020-01-01")
+end_date <- as.Date("2022-12-31")
+all_stocks[3,]
+# Generate all Fridays within the date range
+all_dates <- seq(from = start_date, to = end_date, by = "day")
+
+# Filter to only Fridays
+fridays <- all_dates[weekdays(all_dates) == "Friday"]
+
+all_stocks_xts <- xts(all_stocks[,-1], order.by = all_stocks$date)
+
+# Create an empty xts object with Fridays
+friday_xts <- xts(, order.by = fridays)
+
+# Merge and fill missing values with the last observation
+weekly_stocks <- merge(all_stocks_xts, friday_xts, all = TRUE)
+
+# Fill forward and backward to handle all NAs
+weekly_stocks <- na.locf(weekly_stocks, fromLast = FALSE)  # Forward fill (Thursday, Wednesday, etc.)
+weekly_stocks <- na.locf(weekly_stocks, fromLast = TRUE)   # Backward fill for leading NAs
+
+# Keep only the rows aligned to Fridays
+weekly_stocks <- weekly_stocks[fridays]
+
+# Verify the data
+head(weekly_stocks)
+nrow(weekly_stocks)
+sum(is.na(weekly_stocks))
+weekly_stocks_df <- data.frame(date = index(weekly_stocks), coredata(weekly_stocks))
+
+getwd()
+# Save the dataset
+write.csv(weekly_stocks_df, "weekly_stock_prices_cleaned.csv", row.names = FALSE)
+
+st <- weekly_stocks_df
+# Check for any remaining missing values
+sum(is.na(weekly_stocks_df))
+
+# Check the result
+head(weekly_stocks_df)
+# Check the weekly datas
+# Check the merged dataset
+head(all_stocks)
+dim(all_stocks)
+all_stocks[,2]
+colnames(all_stocks)
 # your file_path
+
 path <- getwd()
 path
 setwd(file.path(getwd(), "data_stocks"))
@@ -458,19 +527,13 @@ food <- read.csv("food_stoks.csv")
 oil<- read.csv("oil_stocks.csv")
 travel <- read.csv("travel_stocks.csv")
 logistics <- read.csv("logistics_stocks.csv")
+st[,1]
 
-# exclude rows for stocks higher than 756
-logistics <-logistics[1:756,]
-it <- it[1:756,]
-automobile <- automobile[1:756,]
-fashion <- fashion[1:756,]
-healthcare <- healthcare[1:756,]
-food <- food[1:756,]
-oil <- oil[1:756,]
-travel <- oil[1:756,]
 # merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
 # save the final file
+st[,1]
+spotify
 write.csv(st, file = "final_data.csv", row.names = FALSE)
 
 ########################################################################## start ur code from here ##########################################################################
@@ -480,19 +543,27 @@ library(tidyverse)
 library(dplyr)
 library(zoo)
 library(httr)
-library(DepthProc)
-library(MultiRNG)
-library(fda)
-library(fda.usc)
-library(fdaoutlier)
-library(fda)
 
 # Read the file
 path <- getwd()
 setwd(file.path(getwd(), "data_stocks"))
-st <- read.csv("final_data.csv")
+st <- read.csv("weekly_stock_prices_cleaned.csv")
 head(st)
+
 sum(is.na(st))
+#Data preprocessing
+st <- st[, -1]
+log_returns <- apply(st, 2, function(x) c(diff(log(x))))
+st <- 100*log_returns
+st <- data.frame(st)
+dim(log_returns)
+png("After_log.png", width = 1000, height = 800)
+plot(st$SPOT.Close, type="l", col="blue", lwd=2, xlab="", ylab="SPOT Close", 
+     main="SPOT Close Prices After Transformation", cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+dev.off()
 
 # Visualize stocks for IT
 opar <- par(mfrow=c(2,2))
@@ -518,50 +589,46 @@ plot(st$GOOG.Close, type="l", col="purple", lwd=2, xlab="", ylab="GOOG Close",
 dev.off()
 
 
+
 # Depth analysis before smoothing
+install.packages("DepthProc")
+install.packages("MultiRNG")
+library(DepthProc)
+library(MultiRNG)
 
 st <- as.matrix(st)
 sum(is.na(st))
 
 # Euclidean depth
 
-dE <- depthEuclid(st, st) # dE is the vector of depth values for each observation
-dE
+dE <- depthEuclid(st, st)
 mdE <- which.max(dE)
-mdE # index of the maximum depth on dE
 dE[mdE] # euclidean depth of the deepest point in the dataset
 
 # a very small depth value (like this one) suggests that the dataset 
 # is highly spread out or has strong outliers, meaning even the "deepest" point is not very central.
 
 st[mdE,] # retrieves the most central (deepest) row from the dataset based on Euclidean Depth
-apply(st,2,median) # median of each column in the dataset
 
-# if st[mdE, ] and apply(st, 2, median) are close, the deepest point is 
-# near the median, suggesting symmetric distribution
-# If they differ significantly, the data might be skewed or have outliers
 
+apply(st,2,median)
 
 plot(st)
-points(st[mdE,1], st[mdE,2], pch=23, col="blue", bg="blue", lwd=5)
-points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=5)
-legend("topright", legend=c("Deepest Point", "Median Point"),
-       pch=c(23, 24), col=c("blue", "red"), pt.bg=c("blue", "red"), cex=1,horiz=TRUE)
+points(st[mdE,1], st[mdE,2], pch=23, col="blue", bg="blue", lwd=2)
+points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=2)
 # red one is median point while the blue one is the deepest point, affected by outliers
 # if the blue (deepest) and red (median) points are close, the dataset is relatively symmetric and balanced.
 # if they are far apart, the dataset might have outliers or skewed distribution (the Euclidean Depth is influenced by the overall spread of the data)
 
 
-
-
 # Local depth
 dL <- depthLocal(st, st, depth_params1 = list(method = "LP"))
+dL
 mdL <- which.max(dL)
 dL[mdL]
 st[mdL,]
 
 depthContour(st[,1:2], depth_params = list(method = "Local", depth_params1 = list(method = "LP")))
-
 
 # MBD, Frainman-Muniz
 dMBD <- fncDepth(st, method = "MBD")
@@ -569,38 +636,62 @@ dFM <- fncDepth(st, method = "FM")
 mdMBD <- which.max(dMBD)
 mdFM <- which.max(dFM)
 
-dMBD[mdMBD] # deepest points
-st[mdMBD,] 
+dMBD[mdMBD]
+st[mdMBD,]
 
-dFM[mdFM]  # deepest points
+dFM[mdFM]
 st[mdFM,]
+png("depth.png", width = 1000, height = 800)
+matplot(t(st), type = "l", lty = 1, col = "gray",
+        xlab = "Week", ylab = "Stock Value",
+        main = "Stock Curves with Most Central (FM) Highlighted")
 
-# dMBD[mdMBD] and dFM[mdFM] display the depth values of the deepest points according 
-# to the MBD and FM methods.
-# st[mdMBD,] and st[mdFM,] display the actual data points corresponding to these deepest points
-
+# Overlay the most central stock's curve in red
+lines(st[mdFM, ], col = "red", lwd = 2)
 dev.off()
 plot(st)
-points(st[mdMBD,1], st[mdMBD,2], pch=23, col="blue", bg="blue", lwd=5)
-points(st[mdFM,1], st[mdFM,2], pch=23, col="green", bg="green", lwd=5)
-points(median(st[,1]), median(st[,2]), pch=24, col="red", bg="red", lwd=5)
+points(st[mdMBD,5], st[mdMBD,6], pch=23, col="blue", bg="blue", lwd=2)
+points(st[mdFM,5], st[mdFM,6], pch=23, col="green", bg="green", lwd=2)
+points(median(st[,5]), median(st[,6]), pch=24, col="red", bg="red", lwd=2)
 
+png("Friman.png", width = 800, height = 600)
+
+# Plot the data in st (this will use the default plot method for a matrix)
+plot(st, main = "Stock Data with Depth", cex.main = 2)
+
+# Add a blue point for the most central stock (by MBD) using columns 3 and 4.
+points(st[mdFM,5], st[mdFM,6], pch=23, col="blue", bg="blue", lwd=2)
+
+# Add a red point for the coordinate-wise median of columns 3 and 4.
+points(median(st[, 3]), median(st[, 4]), pch = 24, col = "red", bg = "red", lwd = 2)
+
+# Add a legend to the top right corner
+legend("topright", 
+       legend = c("Friman-Munith depth", "Median"), 
+       pch = c(23, 24), 
+       col = c("blue", "red"), 
+       pt.bg = c("blue", "red"), 
+       lwd = 2,cex = 1.6)
+
+# Close the device to save the file.
+dev.off()
 fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
-# These lines compute the median depth for the data using MBD and FM methods. 
-# This gives a central point based on each depth method, similar to calculating 
-# the median of the dataset but based on depth rather than simple averaging.
+
+# B-splines with penalty
+library(fda)
+library(fda.usc)
 
 ### B-splines
+dim(st)
 st <- as.matrix(st)
-day <- c(1:756)
-nrow(st)
+day <- c(1:156)
 
+nrow(st)
 # Create a grid for lambda and number of basis
 l <- c(0 ,2^seq(-9, 9, len = 40))
 nb <- seq(7, 40, by = 2)
-time_points <- 1:756
-
+time_points <- 1:156
 # Create functional ojects with argumen values
 fdata_obj <- fdata(t(st), argvals = time_points)
 
@@ -608,7 +699,7 @@ fdata_obj <- fdata(t(st), argvals = time_points)
 # Smooth with B-splines
 out0 <- optim.basis(fdata_obj, lambda = l, numbasis = nb, type.basis = "bspline")
 sum((fdata_obj$data - out0$fdata.est)^2)
-basis <- create.bspline.basis(c(1,756),nbasis= out0$numbasis.opt, norder = 4) # cubic splines
+basis <- create.bspline.basis(c(1,156),nbasis= out0$numbasis.opt, norder = 4)
 
 out0$fdata.est # the smoothed functional data
 out0$numbasis.opt # the optimal number of basis functions
@@ -634,12 +725,11 @@ for(i in 1:40){
   sse[i] = smooth$SSE
 }
 
-
 # Plot df, SSE and GCV
 par(mfrow = c(3,1))
-plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5) # shows how model complexity changes with 𝜆
-plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5) # measures fit quality
-plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5) # helps choose the best 𝜆(minimum GCV)
+plot(0:39,df[1:40],type='l',xlab='log lambda',ylab='df',cex.lab=1.5)
+plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
+plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
 dev.off()
 getwd()
 #Download the plot
@@ -667,17 +757,23 @@ dev.off()
 # Find optimal lambda
 optimal_lambda_index = which.min(gcv)
 optimal_lambda = lambda_seq[optimal_lambda_index]
-optimal_lambda
-
 optimal_df = df[optimal_lambda_index]
 optimal_sse = sse[optimal_lambda_index]
-basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
+basis <- create.bspline.basis(c(1,156),nbasis= 7, norder = 4)
 
 
-tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=optimal_lambda)
 smooth <- smooth.basis(day,st,tD3fdPar)
 smooth$SSE
 plot(smooth$fd)
+par()
+dev.off()
+fitted<- eval.fd(1:156, smooth$fd)
+plot(st[,3])
+lines(fitted[,3])
+
+<<<<<<< HEAD
+<<<<<<< HEAD
 
 plot(out0$fdataobj)
 names(out0$fdataobj)
@@ -686,73 +782,199 @@ dim(t(st))
 SSE <-sum((st - t(out0$fdataobj$data))^2)
 st[1,]
 
+png("B-splines.png",width = 1000, height = 800)
+plot(smooth$fd, lwd = 2,main = 'B-splines fiited', cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+dev.off()
+
+
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> parent of 7cf9c51 (Kernel updated)
+=======
+>>>>>>> 70544f7541eccaec1306643b96303d22992ef2d8
+#Kernel smoothing
+=======
 
 # EDA and outliers detection for b-spline
 smooth.fd = smooth$fd
-
+dev.off()
 plot(smooth.fd)
+D1 <- deriv.fd(smooth.fd, deriv = 1)
+D2 <- deriv.fd(smooth.fd, deriv = 2)
+plot(D1)
+plot(D2)
+png("first_derivative.png", width = 1200, height = 800)
 
-# Calculate mean and standard deviation
+plot(D1, , lwd = 2, main = "First Derivative",
+     xlab = "Time", ylab = "First Derivative Value",cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+
+legend("topright", legend = "First Derivative", col = "blue", lwd = 2)
+
+dev.off()  # Close the device to save the plot
+
+# 2. Save Second Derivative Plot
+png("second_derivative.png", width = 1200, height = 800)
+
+plot(D2, lwd = 2, main = "Second Derivative",
+     xlab = "Time", ylab = "Second Derivative Value",cex = 2,cex.lab = 1.8,    # Axis labels
+     cex.axis = 1.8, # Axis tick labels
+     cex.main = 2,   # Main title
+     cex.sub = 2)
+
+
+dev.off()  # Close the device to save the plot
 b_spline_mean = mean.fd(smooth.fd)
 b_spline_sd = std.fd(smooth.fd)
+plot(smooth.fd)
+b_spline_mean = mean.fd(smooth.fd)
+lines(b_spline_mean, lwd=3, lty=2, col=2)
+b_spline_mean <- mean.fd(smooth.fd)
 
-# Plot the mean and standard deviation lines
-lines(b_spline_mean, lwd=4, lty=2, col=2)
-lines(b_spline_sd, lwd=4, lty=2, col=4)
+# Open a graphics device to save the plot (e.g., PNG)
+png("functional_data_plot_large_text.png", width = 1200, height = 900)
 
-# Plot the mean ± SD and mean ± 2SD lines
-lines(b_spline_mean-b_spline_sd, lwd=4, lty=2, col=6)
-lines(b_spline_mean+b_spline_sd, lwd=4, lty=2, col=6)
+# Plot the smooth.fd object with larger text sizes
+plot(smooth.fd, main = "Functional Data with Mean Curve", 
+     cex.main = 3,      # Title text size
+     cex.lab = 2.5,     # Axis labels size
+     cex.axis = 2)      # Axis tick labels size
 
-lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
-lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
+# Add the mean curve with specified line width, type, and color
+lines(b_spline_mean, lwd = 5, lty = 2, col = 2)
 
-# Add the legend
-legend("topright", 
-       legend=c("Mean", "SD", "Mean ± SD", "Mean ± 2SD"),
-       col=c(2, 4, 6, 8), 
-       lty=4, 
-       lwd=6, 
-       box.lwd=3,
-      cex=2)
+# Add a legend with larger text
+legend("topright", legend = c("Smooth Data", "Mean Curve"),
+       col = c(1, 2), lty = c(1, 2), lwd = c(3, 5),
+       cex = 2) # Legend text size
+
+# Close the graphics device
+dev.off()
+
+lines(b_spline_mean-b_spline_sd, lwd=3, lty=2, col=6)
+lines(b_spline_mean+b_spline_sd, lwd=3, lty=2, col=6)
+dev.off()
+
+
 
 # the Bivariate Covariance Function v(s; t)
-# this function captures how the variability of the smoothed functional data changes over time
 
 logprecvar.bifd = var.fd(smooth.fd)
 
-# Contour plot every 5 days
+print(range(logprecvar.bifd$argvals))
 
-day5time = seq(1,756,5)
-logprec.varmat = eval.bifd(day5time, day5time,logprecvar.bifd)
+time = seq(1,156, length = 36)
+logprecvar_mat = eval.bifd(weektime, weektime,
+                            logprecvar.bifd)
 
-persp(day5time, day5time, logprecvar_mat,
-      theta=-45, phi=25, r=3, expand = 0.5,
+persp(weektime, weektime, logprecvar_mat,
+      theta=-20, phi=20, r=3, expand = 0.5,
       ticktype='detailed',
-      xlab="Day",
-      ylab="Day",
-      zlab="variance(log10 precip)")
+      xlab="Week",
+      ylab="Week",
+      zlab="variance")
+png("Variance_perspective.png", width = 1200, height = 1000)
 
+# Create the perspective plot
+persp(weektime, weektime, logprecvar_mat,
+      theta = -20, phi = 20, r = 3, expand = 0.5,
+      ticktype = 'detailed',
+      xlab = "Week",
+      ylab = "Week",
+      zlab = "variance",labcex=2)
 
+# Close the device to finalize and save the file
+dev.off()
+
+contour(weektime, weektime, logprecvar_mat,
+        xlab="Day",
+        ylab="Day")
+
+png("Coontour.png", width = 1200, height = 1000)
+day5time = seq(1,156)
+logprec.varmat = eval.bifd(day5time, day5time,
+                           logprecvar.bifd)
 contour(day5time, day5time, logprec.varmat,
         xlab="Day",
-        ylab="Day", lwd=2,
-        labcex=1)
+        ylab="Day", lwd=2.2,
+        labcex=2)
+dev.off()
 
-### Outlier Detection using Functional Boxplot
+### Descriptive measures for functional data.
+
+library(fda.usc)
+data(poblenou)
+nox <- poblenou$nox
+working <- poblenou$nox[poblenou$df$day.festive == 0 &
+                          as.integer(poblenou$df$day.week) < 6]
+nonworking <- poblenou$nox[poblenou$df$day.festive == 1 |
+                             as.integer(poblenou$df$day.week) > 5]
+
+# Centrality measures (working)
+
+par( mfrow=c(2, 2) )
+plot(func.mean(working), ylim = c(10, 170),
+     main = "Centrality measures in working days")
+legend(x = 11, y = 170, cex = 1, box.col = "white", lty = 1:5,
+       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
+                                "median.mode","median.RP"))
+lines(func.trim.mode(working, trim = 0.15), col = 2, lty = 2)
+lines(func.trim.RP(working, trim = 0.15), col = 3, lty = 3)
+lines(func.med.mode(working, trim = 0.15), col = 4, lty = 4)
+lines(func.med.RP(working, trim = 0.15), col = 5, lty = 5)
+
+# Centrality measures (non-working)
+plot(func.mean(nonworking), ylim = c(10,170),
+     main = "Centrality measures in non-working days")
+legend(x = 11, y = 170, cex = 1, box.col = "white",lty = 1:5,
+       col = c(1:5), legend = c("mean","trim.mode","trim.RP",
+                                "median.mode","median.RP"))
+lines(func.trim.mode(nonworking, trim = 0.15),col = 2, lty = 2)
+lines(func.trim.RP(nonworking, trim = 0.15),col = 3, lty = 3)
+lines(func.med.mode(nonworking, trim = 0.15),col = 4, lty = 4)
+lines(func.med.RP(nonworking, trim = 0.15),col = 5, lty = 5)
+
+# Measures of dispersion   (working)
+plot(func.var(working),
+     main = "Dispersion measures in working days", ylim = c(100 ,5500))
+legend(x = 11, y = 5300,cex = 1, box.col = "white", lty = 1:3, col = 1:3,
+       legend = c("var", "trimvar.mode", "trimvar.RP"))
+lines(func.trimvar.mode(working,trim = 0.15), col = 2, lty = 2)
+lines(func.trimvar.RP(working,trim = 0.15), col = 3, lty = 3)
+
+# Measures of dispersion   (non-working)
+plot(func.var(nonworking),
+     main = "Dispersion measures in non-working days", ylim = c(100, 5500))
+legend(x = 11, y = 5300, cex = 1, box.col = "white", lty = 1:3, col = 1:3,
+       legend = c("var", "trimvar.mode", "trimvar.RP"))
+lines(func.trimvar.mode(nonworking, trim = 0.15), col = 2, lty = 2)
+lines(func.trimvar.RP(nonworking, trim = 0.15), col = 3, lty = 3)
+
+dev.off()
+
+### boxplot
 
 boxplot(smooth.fd)
 
 
 ### Kernel smoothing
-out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV"))#Local regression
-out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV"))#Local kernel
-out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
-out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
-out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
-out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
+>>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
+out1 <- optim.np(fdata_obj , type.S = S.NW, h = 3:50,par.CV = list(criteria = "GCV"))#Local regression
+out2 <- optim.np(fdata_obj, type.S = S.LLR,h = 3:50, par.CV = list(criteria = "GCV"))#Local kernel
 
+out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:50, Ker = Ker.norm) # Normal Kernel
+out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:50, Ker = Ker.tri, correl = FALSE) #Triweight Kernel
+out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:50, Ker = Ker.epa, correl = FALSE) #Epanechnikov Kerne
+out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:50, Ker = Ker.unif, correl = FALSE) #Uniform Kernel
 
+SSE_out0 <-sum((fdata_obj - out0$fdata.est )^2)
 SSE_out1 <-sum((fdata_obj - out1$fdata.est )^2)
 SSE_out2 <-sum((fdata_obj - out2$fdata.est )^2)
 SSE_out3 <-sum((fdata_obj - out3$fdata.est )^2)
@@ -766,20 +988,89 @@ gcv_values <- c(out0$gcv.opt, out1$gcv.opt, out2$gcv.opt, out3$gcv.opt,
                 out4$gcv.opt, out5$gcv.opt, out6$gcv.opt)
 
 # Define labels for each method
-methods <- c("out0", "out1", "out2", "out3", "out4", "out5", "out6")
+methods <- c("B-splines", "NW", "LR", "Normal ", "Triweight ", "Epanech.", "Uniform")
 
 # Plot GCV values
-barplot(gcv_values, names.arg = methods, col = "lightblue", main = "GCV Comparison",
-        ylab = "GCV Value", xlab = "Methods", las = 2)
+
+
+png("GCV_comparison_plot.png", width = 1200, height = 800)
+
+par(mar = c(5, 7, 4, 2) + 0.1)  # Adjust margins for better text spacing
+
+# Create the barplot without rotating labels
+bp <- barplot(gcv_values, names.arg = methods, col = "skyblue", 
+              main = "GCV Comparison by smoothing methods", 
+              ylab = "GCV Value", cex.names = 2, cex.lab = 2, cex.main = 3, 
+              ylim = c(0, max(gcv_values) * 1.1), border = "white")
+
+# Add horizontal grid lines for clarity
+grid(nx = NULL, ny = NULL, col = "gray90", lty = 2)
+
+
+dev.off()  
 
 # Compute Sum of Squared Errors (SSE) for each method
-sse_values <- c(SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
+sse_values <- c(SSE_out0, SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
 
 # Plot SSE values
-barplot(sse_values, names.arg = methods[-1], col = "lightcoral", main = "SSE Comparison",
-        ylab = "Sum of Squared Errors", xlab = "Methods", las = 2)
+png("SSE_comparison_plot.png", width = 1200, height = 800)
 
-par(mfrow = c(1, 1))  # Reset layout to default
+sse_values_adjusted <- sse_values[-1]  # Adjust SSE values if removing the first method
+methods_adjusted <- methods[-1]  # Adjust method names to match
+options(scipen = 999)
+# Improved plot for SSE values
+png("SSE_comparison_plot.png", width = 1200, height = 800)
+
+par(mar = c(5, 7, 4, 2) + 0.1)  # Adjust margins
+
+# Create the barplot without rotating labels
+bp_sse <- barplot(sse_values, names.arg = methods, col = "lightcoral", 
+                  main = "SSE Comparison by smoothing methods", 
+                  ylab = "Sum of Squared Errors", 
+                  cex.names = 2, cex.lab = 2, cex.main = 3, 
+                  ylim = c(0, max(sse_values) * 1.1), border = "white")
+
+# Add horizontal grid lines for better readability
+grid(nx = NULL, ny = NULL, col = "gray90", lty = 2)
+
+
+dev.off()  # Save the plot to file
+
+png("gcv_criteria_plot.png", width = 1200, height = 800)
+
+# Set plot margins and background for better visuals
+par(mar = c(5, 6, 4, 8) + 0.1, bg = "white")  # Increased right margin for space
+
+# Main plot with better aesthetics
+plot(out1$h, out1$gcv, type = "l",
+     main = "GCV Criteria",
+     xlab = "Bandwidth (h) Values",
+     ylab = "GCV Criteria",
+     col = "forestgreen", lwd = 3,
+     cex.lab = 1.8, cex.main = 2, cex.axis = 1.5)
+
+# Add grid lines for better clarity
+grid(lty = "dotted", col = "gray70")
+
+# Add additional lines with unique colors and styles
+lines(out2$h, out2$gcv, col = "royalblue", lwd = 3, lty = 2)
+lines(out3$h, out3$gcv, col = "darkorange", lwd = 3, lty = 3)
+lines(out4$h, out4$gcv, col = "purple", lwd = 3, lty = 4)
+lines(out5$h, out5$gcv, col = "firebrick", lwd = 3, lty = 5)
+lines(out6$h, out6$gcv, col = "goldenrod", lwd = 3, lty = 6)
+
+# Improved legend with larger text and custom position (left side)
+legend("topright", inset = c(0.01, 0),
+       legend = c("Ker.norm-S.NW", "Ker.norm-S.LLR", 
+                  "Ker.norm-S.KNN", "Ker.tri-S.NW",
+                  "Ker.epa-S.NW", "Ker.unif-S.NW"),
+       col = c("forestgreen", "royalblue", "darkorange", 
+               "purple", "firebrick", "goldenrod"),
+       lwd = 3, lty = 1:6,
+       box.col = "white", cex = 2)
+
+# Close the graphics device to save the image
+dev.off()
 
 
 plot(SSE_out1)
@@ -808,12 +1099,42 @@ plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ",
 ###Plotting the differet smoothing 
 lines(st[,1], col = "red")
 par(mfrow = c(1,2))
-plot(out0$fdata.est[4,],col ="blue", lwd = 3)
+plot(out0$fdata.est[1,],col ="blue", lwd = 3)
 points(st[,4], col = "red")
 
 plot(out3$fdata.est[4,],col ="blue", lwd = 3)
 points(st[,4], col = "red")
+par(opar)
+dev.off()
 
+png("B-splines fitted.png", width = 1200, height = 800)
+plot(out0$fdata.est[2,], col = "blue", lwd = 3, 
+     main = "B-splines fitted", 
+     xlab = "Time", ylab = "Price", 
+     cex.main = 3, cex.lab = 2, cex.axis = 2)
+
+# Add red points for the second data
+points(st[, 2], col = "red", cex = 2)
+dev.off()
+png("Normal kernel fitted.png", width = 1200, height = 800)
+plot(out3$fdata.est[1,], col = "blue", lwd = 3, 
+     main = "Normal kernel fitted", 
+     xlab = "Time", ylab = "Price", 
+     cex.main = 3, cex.lab = 2, cex.axis = 2)
+
+# Add red points for the second data
+points(st[, 2], col = "red", cex = 2)
+dev.off()
+
+png("Triweight kernel fitted.png", width = 1200, height = 800)
+plot(out4$fdata.est[2,], col = "blue", lwd = 3, 
+     main = "Triweight kernel fitted", 
+     xlab = "Time", ylab = "Price", 
+     cex.main = 3, cex.lab = 2, cex.axis = 2)
+
+# Add red points for the second data
+points(st[, 2], col = "red", cex = 2)
+dev.off()
 
 
 ### Selected smoothing ###
@@ -825,15 +1146,22 @@ smooth <- smooth.basis(day,st,tD3fdPar)
 
 
 #PCA
-
 library(fda)
-
-
-nharm = 4
-pcalist = pca.fd(smooth.fd, nharm, centerfns = TRUE) # first 4 principal components (nharm = 4), centered around the mean curve
+nharm = 6
+pcalist = pca.fd(smooth$fd, nharm, centerfns = TRUE)
 plot(pcalist)
 plot(pcalist$harmonics)
 
+for (i in 1:6) {
+  png(paste0("pca_plot_", i, ".png"), width = 800, height = 600)
+  plot(pcalist, harm = i, cex = 2,cex.lab = 2,    # Axis labels
+       cex.axis = 1.5, # Axis tick labels
+       cex.main = 2,   # Main title
+       cex.sub = 1.5)  # 'harm' specifies which component to plot
+  dev.off()
+}
+
+dev.off()
 plotscores(pcalist, loc = 5)
 
 fd.pca1.list <- list() 
@@ -841,24 +1169,21 @@ fd.pca2.list <- list()
 fd.pca3.list <- list() 
 fd.pca4.list <- list() 
 
-# The following blocks of code reconstruct functional data using the PCA 
-# scores, step by step, starting with the mean curve and adding the 
-# components progressively:
 
 for(i in 1:5) {
-  fd.pca1.list[[i]] <- mean.fd(smooth.fd) + 
+  fd.pca1.list[[i]] <- mean.fd(smooth$fd) + 
     pcalist$scores[i,1]*pcalist$harmonics[1]
   
-  fd.pca2.list[[i]] <- mean.fd(smooth.fd) + 
+  fd.pca2.list[[i]] <- mean.fd(smooth$fd) + 
     pcalist$scores[i,1]*pcalist$harmonics[1] + 
     pcalist$scores[i,2]*pcalist$harmonics[2]
   
-  fd.pca3.list[[i]]<- mean.fd(smooth.fd) +
+  fd.pca3.list[[i]]<- mean.fd(smooth$fd) +
     pcalist$scores[i,1]*pcalist$harmonics[1] + 
     pcalist$scores[i,2]*pcalist$harmonics[2] +
     pcalist$scores[i,3]*pcalist$harmonics[3] 
   
-  fd.pca4.list[[i]]<- mean.fd(smooth.fd) +
+  fd.pca4.list[[i]]<- mean.fd(smooth$fd) +
     pcalist$scores[i,1]*pcalist$harmonics[1] + 
     pcalist$scores[i,2]*pcalist$harmonics[2] +
     pcalist$scores[i,3]*pcalist$harmonics[3] +
@@ -870,169 +1195,106 @@ plot(mean.fd(smooth$fd))
 opar <- par(mfrow=c(2,2), ask = TRUE)
 for(i in 1:5) {
   plot(fd.pca1.list[[i]], ylim=c(-1, 1), ylab = "1 PC")
-  lines(smooth.fd[i], col = 2)
+  lines(smooth$fd[i], col = 2)
   
   plot(fd.pca2.list[[i]], ylim=c(-1, 1), ylab = "2 PC")
-  lines(smooth.fd[i], col = 2)
+  lines(smooth$fd[i], col = 2)
   
   plot(fd.pca3.list[[i]], ylim=c(-1, 1), ylab = "3 PC")
-  lines(smooth.fd[i], col = 2)
+  lines(smooth$fd[i], col = 2)
   
   plot(fd.pca4.list[[i]], ylim=c(-1, 1), ylab = "4 PC")
-  lines(smooth.fd[i], col = 2)
+  lines(smooth$fd[i], col = 2)
 }
 par(opar)
+opar <- par(mfrow=c(2,2), ask = TRUE)
+plot(fd.pca1.list[[1]])
+lines(smooth$fd[1], col = 2)
 
+plot(fd.pca2.list[[1]])
+lines(smooth$fd[1])
+     
 varmx <- varmx.pca.fd(pcalist)
 plot(varmx)
-par(opar)
+par(mfrow= c(2,3))
+for (i in 1:6) {
+  png(paste0("varimx_plot_", i, ".png"), width = 1000, height = 800)
+  plot(varmx, harm = i, cex = 2,cex.lab = 2,    # Axis labels
+       cex.axis = 1.5, # Axis tick labels
+       cex.main = 2,   # Main title
+       cex.sub = 1.5)
+  dev.off()
+}
 
 plot(varmx$harmonics)
 
+png("harmonics_plot.png")  # Save as PNG
+plot(varmx$harmonics)
+dev.off()
 plotscores(varmx, loc = 5)
 
-
-# PCA restore the original curves
 fd.vrm1.list <- list() 
 fd.vrm2.list <- list() 
 fd.vrm3.list <- list() 
 fd.vrm4.list <- list() 
 
+
 for(i in 1:5) {
-  fd.vrm1.list[[i]] <- mean.fd(smooth.fd) + 
+  fd.vrm1.list[[i]] <- mean.fd(smooth$fd) + 
     varmx$scores[i,1]*varmx$harmonics[1]
   
-  fd.vrm2.list[[i]] <- mean.fd(smooth.fd) +
+  fd.vrm2.list[[i]] <- mean.fd(smooth$fd) +
     varmx$scores[i,1]*varmx$harmonics[1] + 
     varmx$scores[i,2]*varmx$harmonics[2]
   
-  fd.vrm3.list[[i]]<- mean.fd(smooth.fd) +
+  fd.vrm3.list[[i]]<- mean.fd(smooth$fd) +
     varmx$scores[i,1]*varmx$harmonics[1] + 
     varmx$scores[i,2]*varmx$harmonics[2] +
     varmx$scores[i,3]*varmx$harmonics[3] 
-  
-  fd.vrm4.list[[i]]<- mean.fd(smooth.fd) +
-    varmx$scores[i,1]*varmx$harmonics[1] + 
-    varmx$scores[i,2]*varmx$harmonics[2] +
-    varmx$scores[i,3]*varmx$harmonics[3] +
-    varmx$scores[i,4]*varmx$harmonics[4]
 }
 
 opar <- par(mfrow=c(2,2), ask = TRUE)
 for(i in 1:5) {
   plot(fd.vrm1.list[[i]], ylim=c(-1, 1), ylab = "1 PC")
-  lines(smooth.fd[i], col = 2)
+  lines(smooth$fd[i], col = 2)
   
   plot(fd.vrm2.list[[i]], ylim=c(-1, 1), ylab = "2 PC")
-  lines(smooth.fd[i], col = 2)
+  lines(smooth$fd[i], col = 2)
   
   plot(fd.vrm3.list[[i]], ylim=c(-1, 1), ylab = "3 PC")
-  lines(smooth.fd[i], col = 2)
-  
-  plot(fd.vrm4.list[[i]], ylim=c(-1, 1), ylab = "4 PC")
-  lines(smooth.fd[i], col = 2)
+  lines(smooth$fd[i], col = 2)
 }
 par(opar)
 
-
-### Kernel smoothing
-
-out1 <- optim.np(fdata_obj , type.S = S.NW, par.CV = list(criteria = "GCV")) # Local regression
-out2 <- optim.np(fdata_obj, type.S = S.LLR, par.CV = list(criteria = "GCV")) # Local kernel
-out3 <- optim.np(fdata_obj, type.S = S.KNN, h = 3:35, Ker = Ker.norm) # Normal Kernel
-out4 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.tri, correl = FALSE) # Triweight Kernel
-out5 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.epa, correl = FALSE) # Epanechnikov Kerne
-out6 <- optim.np(fdata_obj, type.S = S.NW, h = 3:35, Ker = Ker.unif, correl = FALSE) # Uniform Kernel
-
-
-SSE_out1 <-sum((fdata_obj - out1$fdata.est )^2)
-SSE_out2 <-sum((fdata_obj - out2$fdata.est )^2)
-SSE_out3 <-sum((fdata_obj - out3$fdata.est )^2)
-SSE_out4 <-sum((fdata_obj - out4$fdata.est )^2)
-SSE_out5 <-sum((fdata_obj - out5$fdata.est )^2)
-SSE_out6 <-sum((fdata_obj - out6$fdata.est )^2)
-
-
-# Combine GCV values into a vector
-gcv_values <- c(out0$gcv.opt, out1$gcv.opt, out2$gcv.opt, out3$gcv.opt, 
-                out4$gcv.opt, out5$gcv.opt, out6$gcv.opt)
-
-# Define labels for each method
-methods <- c("out0", "out1", "out2", "out3", "out4", "out5", "out6")
-
-# Plot GCV values
-barplot(gcv_values, names.arg = methods, col = "lightblue", main = "GCV Comparison",
-        ylab = "GCV Value", xlab = "Methods", las = 2)
-
-# Compute Sum of Squared Errors (SSE) for each method
-sse_values <- c(SSE_out1, SSE_out2, SSE_out3, SSE_out4, SSE_out5, SSE_out6)
-
-# Plot SSE values
-barplot(sse_values, names.arg = methods[-1], col = "lightcoral", main = "SSE Comparison",
-        ylab = "Sum of Squared Errors", xlab = "Methods", las = 2)
-
-par(mfrow = c(1, 1)) # Reset layout to default
-
-
-plot(SSE_out1)
-
-names(out1)
-
-contour(nb, l, out0$gcv, ylab = "Lambda", xlab = "Number of basis", 
-        main = "GCV criteria by optim.basis()")
-
-
-dev.new(width = 150, height = 110, units = "mm")
-plot(out1$h, out1$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
-     xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
-legend(x = 3, y = 6, legend = c("Ker.norm-S.NW", "Ker.norm-S.LLR", 
-                                  "Ker.norm-S.KNN", "Ker.tri-S.NW",
-                                  "Ker.epa-S.NW", "Ker.unif-S.NW"),
-       box.col = "white", lwd = c(2, 2, 2), col = c(3, 4, 5, 6, 7, 8),cex = 0.75)
-lines(out3$h,out3$gcv, col = 5, lwd = 2)
-lines(out4$h,out4$gcv, col = 6, lwd = 2)
-lines(out5$h,out5$gcv, col = 7, lwd = 2)
-lines(out6$h,out6$gcv, col = 8, lwd = 2)
-
-plot(out2$h, out2$gcv, type = "l", main = "GCV criteria  by optim.np() ", 
-     xlab = "Bandwidth (h) values",ylab = "GCV criteria", col = 3, lwd = 2)
-
-### Plotting the differet smoothing 
-lines(st[,1], col = "red")
-par(mfrow = c(1,2))
-plot(out0$fdata.est[4,],col ="blue", lwd = 3)
-points(st[,4], col = "red")
-
-plot(out3$fdata.est[4,],col ="blue", lwd = 3)
-points(st[,4], col = "red")
-
-
-### Selected smoothing ###
-
-basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
-tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
-smooth <- smooth.basis(day,st,tD3fdPar)
+for (i in 1:5) {
+  # Set the output to a PNG file (you can also use pdf(), jpeg(), etc.)
+  png(paste0("reconstruction_", i, ".png"), width = 1200, height = 900)
+  
+  # Save 2x2 grid of plots
+  par(mfrow = c(2, 2)) 
+  
+  # 1 PC Reconstruction
+  plot(fd.vrm1.list[[i]], ylim = c(-1, 1), ylab = "1 PC")
+  lines(smooth$fd[i], col = 2)
+  
+  # 2 PC Reconstruction
+  plot(fd.vrm2.list[[i]], ylim = c(-1, 1), ylab = "2 PC")
+  lines(smooth$fd[i], col = 2)
+  
+  # 3 PC Reconstruction
+  plot(fd.vrm3.list[[i]], ylim = c(-1, 1), ylab = "3 PC")
+  lines(smooth$fd[i], col = 2)
+  
+  # Close the current image file
+  dev.off()
+}
 
 
 
-#PCA
-out4
-library(fda)
-fd_obj <- fdata2fd(out4$fdata.est)
-nharm = 4
-pcalist = pca.fd(fd_obj, centerfns = TRUE)
-names(out4)
 
-str(fd_obj)
-class(fd_obj)
-
-plot(out3$fdata.est, main = "Smoothed Functional Data") # smoothed functions
-
-mean_kernel <- plot(mean(out3$fdata.est))
-
-plot(out3$fdata.est, main = "Smoothed Functional Data")
-
-
+<<<<<<< HEAD
 lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
 
+=======
+>>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
