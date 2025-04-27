@@ -552,6 +552,7 @@ setwd(file.path(getwd(), "data_stocks"))
 st <- read.csv("weekly_stock_prices_cleaned.csv")
 head(st)
 
+
 sum(is.na(st))
 #Data preprocessing
 st <- st[, -1]
@@ -680,7 +681,7 @@ fncDepthMedian(st, method = "FM")
 library(fda)
 library(fda.usc)
 
-### B-splines
+###################################### B-splines ######################################
 dim(st)
 st <- as.matrix(st)
 day <- c(1:156)
@@ -1070,7 +1071,7 @@ points(st[, 2], col = "red", cex = 2)
 dev.off()
 
 
-############### Selected smoothing ###############
+############################################# Selected smoothing #############################################
 
 basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
 tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
@@ -1226,30 +1227,79 @@ lines(b_spline_mean-2*b_spline_sd, lwd=4, lty=2, col=8)
 lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
 
 
-############### Clustering ###############
+
+
+############### Functional Clustering ###############
 
 library(funFEM)
-# Clustrering with FunFEM
-res_v = funFEM(smooth$fd,K=5,model="AkjBk",init="kmeans",lambda=0,disp=TRUE)
+library(fdacluster)
+library(funData)
 
-# Visualization
-fdmeans_v = smooth$fd
-fdmeans_v$coefs = t(res_v$prms$my)
-plot(fdmeans_v,lwd=2,lty=1)
-axis(1,at=seq(5,181,6),labels=velov$dates[seq(5,181,6)],las=2)
+# --- FunFEM Clustering ---
 
-# Choice of K (may take a long time!)
-res_v2 = funFEM(fdobj_v,K=2:20,model='AkjBk',init='kmeans',lambda=0,disp=TRUE)
-res_v2$allCriterions
-plot(res_v2$allCriterions$K,res_v2$allCriterions$bic,type='b',xlab='K',main='BIC')
-res_v2$cls
+res_funfem <- funFEM(smooth$fd, K = 2:6, model = 'AkjBk', init = 'kmeans', lambda = 0, disp = TRUE)
 
-#par(mfrow=c(1,1))
-plot(t(fdobj_v$coefs) %*% res_v2$U,col=res$cls,pch=19,main="Discriminative space")
-text(t(fdobj_v$coefs) %*% res_v2$U)
+# Save FunFEM cluster memberships
+funfem_clusters <- res_funfem$cls
 
-plot(fdobj_v[1:20], col=res_v2$cls[1:20], lwd=2, lty=1)
+# Plot BIC to choose K
+plot(res_funfem$allCriterions$K, res_funfem$allCriterions$bic, type = 'b',
+     xlab = 'Number of Clusters K', ylab = 'BIC', main = 'BIC - FunFEM')
 
-fdmeans_v2 = fdobj_v
-fdmeans_v2$coefs = t(res_v2$prms$my)
-plot(fdmeans_v2, col=1:max(res_v2$cls), lwd=2)
+# Discriminative Space Plot
+plot(t(smooth$fd$coefs) %*% res_funfem$U, col = funfem_clusters, pch = 19, main = "Discriminative Space - FunFEM")
+text(t(smooth$fd$coefs) %*% res_funfem$U, labels = 1:seq_along(funfem_clusters), pos = 3, cex = 0.6)
+
+# Plot the first 20 smoothed functions colored by clusters
+plot(smooth$fd, col = funfem_clusters[1:20], lwd = 2, lty = 1)
+
+# Plot cluster mean functions
+fdmeans_v2 <- smooth$fd
+fdmeans_v2$coefs <- t(res_funfem$prms$my)
+plot(fdmeans_v2, col = 1:max(funfem_clusters), lwd = 2, main = "Cluster Centroids - FunFEM")
+
+# --- Convert to funData for other clustering methods ---
+
+fn_w <- fd2funData(smooth$fd, argvals = day)
+
+# --- HCLUST Clustering ---
+
+w1 <- fdahclust(fn_w, centroid_type = "mean",
+                metric = "l2", linkage_criterion = "complete", n_clusters = 4)
+
+# HCLUST Silhouette plot
+plot(w1$silhouettes, type = "b", main = "Silhouettes - HCLUST")
+
+# --- KMEANS Clustering ---
+
+w2 <- fdakmeans(fn_w, n_clusters = 4, seeding_strategy = "hclust",  
+                centroid_type = "mean", metric = "l2")
+
+# KMEANS plots
+plot(w2, type = "amplitude", main = "Amplitude Plot - KMEANS")
+plot(w2, type = "phase", main = "Phase Plot - KMEANS")
+
+# --- DBSCAN Clustering ---
+
+day_grid <- seq(min(day), max(day), length.out = 50)
+fd_eval <- t(eval.fd(day_grid, smooth$fd))
+
+w3 <- fdadbscan(x = day_grid, y = fd_eval)
+
+# DBSCAN plot
+plot(w3, main = "DBSCAN Clustering")
+
+# --- Save clustering results ---
+
+# Collect clustering memberships
+dt_w <- data.frame(
+  FunFEM = funfem_clusters,
+  Hclust = w1$memberships,
+  Kmeans = w2$memberships,
+  Dbscan = w3$memberships
+)
+
+write.csv(dt_w, "cluster_results.csv", row.names = FALSE)
+
+# See results
+head(dt_w)
