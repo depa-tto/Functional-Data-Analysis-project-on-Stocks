@@ -1290,7 +1290,7 @@ plot(fn_w)
 # "complete", "average", "single", "ward.D2"
 
 w1 <- fdahclust(fn_w, centroid_type = "mean",
-                metric = "l2", linkage_criterion = "complete", n_clusters = 4)
+                metric = "l2", linkage_criterion = "complete", n_clusters = 5)
 
 plot(w1)
 
@@ -1299,7 +1299,7 @@ plot(w1$silhouettes, type = "b", main = "Silhouettes - HCLUST")
 
 # --- KMEANS Clustering ---
 
-w2 <- fdakmeans(fn_w, n_clusters = 4, seeding_strategy = "hclust",  
+w2 <- fdakmeans(fn_w, n_clusters = 5, seeding_strategy = "hclust",  
                 centroid_type = "mean", metric = "l2")
 
 # KMEANS plots
