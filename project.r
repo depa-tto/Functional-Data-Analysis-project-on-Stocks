@@ -731,7 +731,7 @@ plot(0:39,sse[1:40],type='l',xlab='log lambda',ylab='sse',cex.lab=1.5)
 plot(0:39,gcv[1:40],type='l',xlab='log lambda',ylab='gcv',cex.lab=1.5)
 dev.off()
 getwd()
-#Download the plot
+# Download the plot
 png("sse_plot.png", width = 800, height = 600)
 
 plot(seq(-9, 9, len = 40), sse[1:40], type = 'l',
@@ -787,6 +787,7 @@ plot(smooth$fd, lwd = 2,main = 'B-splines fiited', cex = 2,cex.lab = 1.8,    # A
 dev.off()
 
 # EDA and outliers detection for b-spline
+plot(smooth$fd)
 smooth.fd = smooth$fd
 dev.off()
 plot(smooth.fd)
@@ -895,7 +896,28 @@ dev.off()
 
 ### boxplot
 
-boxplot(smooth.fd)
+
+boxplot(smooth$fd)
+
+# 1. Define the correct domain for evaluation
+domain <- smooth$fd$basis$rangeval
+grid <- seq(domain[1], domain[2], length.out = 100)
+
+# 2. Evaluate the functional data on the grid
+eval_fd <- eval.fd(grid, smooth$fd)
+
+# 3. Create a simple and nicer boxplot
+boxplot(as.data.frame(t(eval_fd)),
+        main = "Boxplot of Function Values",
+        xlab = "Evaluation Points",
+        ylab = "Function Values",
+        col = "lightblue",         # Light blue color for boxes
+        border = "darkblue",        # Dark blue borders
+        outpch = 20,                # Outliers as solid points
+        outcol = "red",             # Red color for outliers
+        cex.main = 1.5,             # Bigger title size
+        cex.lab = 1.2,              # Bigger label size
+        cex.axis = 0.8)             # Slightly smaller axis text
 
 
 ### Kernel smoothing
@@ -1071,14 +1093,6 @@ points(st[, 2], col = "red", cex = 2)
 dev.off()
 
 
-############################################# Selected smoothing #############################################
-
-basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
-tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
-smooth <- smooth.basis(day,st,tD3fdPar)
-
-
-
 #PCA
 library(fda)
 nharm = 6
@@ -1234,10 +1248,14 @@ lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
 library(funFEM)
 library(fdacluster)
 library(funData)
+set.seed(123)
 
 # --- FunFEM Clustering ---
 
-res_funfem <- funFEM(smooth$fd, K = 2:6, model = 'AkjBk', init = 'kmeans', lambda = 0, disp = TRUE)
+plot(smooth$fd)
+res_funfem <- funFEM(smooth$fd,K = 2:10,model = 'AkjBk',init = 'kmeans', lambda = 0, disp = TRUE)
+res_funfem$allCriterions
+
 
 # Save FunFEM cluster memberships
 funfem_clusters <- res_funfem$cls
@@ -1246,12 +1264,15 @@ funfem_clusters <- res_funfem$cls
 plot(res_funfem$allCriterions$K, res_funfem$allCriterions$bic, type = 'b',
      xlab = 'Number of Clusters K', ylab = 'BIC', main = 'BIC - FunFEM')
 
-# Discriminative Space Plot
-plot(t(smooth$fd$coefs) %*% res_funfem$U, col = funfem_clusters, pch = 19, main = "Discriminative Space - FunFEM")
-text(t(smooth$fd$coefs) %*% res_funfem$U, labels = 1:seq_along(funfem_clusters), pos = 3, cex = 0.6)
 
-# Plot the first 20 smoothed functions colored by clusters
-plot(smooth$fd, col = funfem_clusters[1:20], lwd = 2, lty = 1)
+# Discriminative Space Plot
+plot(t(smooth$fd$coefs) %*% res_funfem$U, col = funfem_clusters, cex = 4, pch = 19, main = "Discriminative Space - FunFEM")
+
+
+# Plot the smoothed functions colored by clusters
+plot(smooth$fd, col = funfem_clusters, lwd = 2, lty = 1)
+plot(smooth$fd[1:20], col = funfem_clusters, lwd = 2, lty = 1)
+
 
 # Plot cluster mean functions
 fdmeans_v2 <- smooth$fd
@@ -1261,11 +1282,17 @@ plot(fdmeans_v2, col = 1:max(funfem_clusters), lwd = 2, main = "Cluster Centroid
 # --- Convert to funData for other clustering methods ---
 
 fn_w <- fd2funData(smooth$fd, argvals = day)
+autoplot.funData(fn_w)
+plot(fn_w)
+
 
 # --- HCLUST Clustering ---
+# "complete", "average", "single", "ward.D2"
 
 w1 <- fdahclust(fn_w, centroid_type = "mean",
                 metric = "l2", linkage_criterion = "complete", n_clusters = 4)
+
+plot(w1)
 
 # HCLUST Silhouette plot
 plot(w1$silhouettes, type = "b", main = "Silhouettes - HCLUST")
