@@ -1354,3 +1354,18 @@ dt_w[dt_w$FunFEM == 2,]
 dt_w[dt_w$FunFEM == 3,]
 dt_w[dt_w$FunFEM == 4,]
 dt_w[dt_w$FunFEM == 5,]
+
+
+dt_w[dt_w$Hclust == 1,]
+dt_w[dt_w$Hclust == 2,]
+dt_w[dt_w$Hclust == 3,]
+dt_w[dt_w$Hclust == 4,]
+dt_w[dt_w$Hclust == 5,]
+
+
+
+dt_w[dt_w$Kmeans == 1,]
+dt_w[dt_w$Kmeans == 2,]
+dt_w[dt_w$Kmeans == 3,]
+dt_w[dt_w$Kmeans == 4,]
+dt_w[dt_w$Kmeans == 5,]
