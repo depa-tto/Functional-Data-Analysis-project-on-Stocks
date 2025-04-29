@@ -677,11 +677,12 @@ dev.off()
 fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
 
+###################################### B-splines ######################################
+
 # B-splines with penalty
 library(fda)
 library(fda.usc)
 
-###################################### B-splines ######################################
 dim(st)
 st <- as.matrix(st)
 day <- c(1:156)
@@ -1267,7 +1268,10 @@ plot(res_funfem$allCriterions$K, res_funfem$allCriterions$bic, type = 'b',
 
 # Discriminative Space Plot
 plot(t(smooth$fd$coefs) %*% res_funfem$U, col = funfem_clusters, cex = 4, pch = 19, main = "Discriminative Space - FunFEM")
-
+text(t(smooth$fd$coefs) %*% res_funfem$U, 
+     labels = colnames(st),  
+     pos = 3,                # position of text relative to point (above)
+     cex = 1.2)
 
 # Plot the smoothed functions colored by clusters
 plot(smooth$fd, col = funfem_clusters, lwd = 2, lty = 1)
@@ -1306,6 +1310,9 @@ w2 <- fdakmeans(fn_w, n_clusters = 5, seeding_strategy = "hclust",
 plot(w2, type = "amplitude", main = "Amplitude Plot - KMEANS")
 plot(w2, type = "phase", main = "Phase Plot - KMEANS")
 
+plot(w2$silhouettes, type = "b", main = "Silhouettes - KMEANS")
+
+
 # --- DBSCAN Clustering ---
 
 day_grid <- seq(min(day), max(day), length.out = 50)
@@ -1330,3 +1337,20 @@ write.csv(dt_w, "cluster_results.csv", row.names = FALSE)
 
 # See results
 head(dt_w)
+dt_w
+st
+dim(dt_w)
+dim(st)
+
+
+dt_w$StockName <- colnames(st)
+
+dt_w <- dt_w[, c("StockName", "FunFEM", "Hclust", "Kmeans", "Dbscan")]
+write.csv(dt_w, "cluster_results_with_names.csv", row.names = FALSE)
+
+dt_w
+dt_w[dt_w$FunFEM == 1,]
+dt_w[dt_w$FunFEM == 2,]
+dt_w[dt_w$FunFEM == 3,]
+dt_w[dt_w$FunFEM == 4,]
+dt_w[dt_w$FunFEM == 5,]
