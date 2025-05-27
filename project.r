@@ -20,8 +20,10 @@ fill_na_with_moving_avg <- function(x, window = 10) {
   return(x)
 }
 
-# fashion companies
+st[,1:8]
 
+# fashion companies
+st
 kering <- getSymbols("KER.PA", src = "yahoo", from = "2020-01-01", to = "2022-12-31", auto.assign = FALSE)
 kering <- kering$KER.PA.Close
 head(kering)
@@ -464,6 +466,7 @@ logistics_stocks$date <- as.Date(rownames(logistics_stocks))
 stock_list <- list(it_stocks, automobile_stocks, fashion_stocks, healthcare_stocks, 
                    food_stoks, oil_stocks, travel_stocks, logistics_stocks)
 
+st[,17]
 # Merge all datasets by 'date'
 
 start_date <- as.Date("2020-01-01")
@@ -532,7 +535,7 @@ st[,1]
 # merge all stocks
 st <- cbind.data.frame(logistics,it,automobile,fashion,healthcare,food,oil,travel)
 # save the final file
-st[,1]
+st[,17:23]
 spotify
 write.csv(st, file = "final_data.csv", row.names = FALSE)
 
@@ -677,7 +680,7 @@ legend("topright",
 dev.off()
 fncDepthMedian(st, method = "MBD")
 fncDepthMedian(st, method = "FM")
-
+getwd()
 # B-splines with penalty
 library(fda)
 library(fda.usc)
@@ -1139,15 +1142,11 @@ dev.off()
 
 ### Selected smoothing ###
 
-basis <- create.bspline.basis(c(1,776),nbasis= out0$numbasis.opt, norder = 4)
-tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
-smooth <- smooth.basis(day,st,tD3fdPar)
-
 
 
 #PCA
 library(fda)
-nharm = 6
+nharm = 4
 pcalist = pca.fd(smooth$fd, nharm, centerfns = TRUE)
 plot(pcalist)
 plot(pcalist$harmonics)
@@ -1298,3 +1297,367 @@ lines(b_spline_mean+2*b_spline_sd, lwd=4, lty=2, col=8)
 
 =======
 >>>>>>> 1ff0d3075724ddecfd65ff8446f38908e4efff95
+
+basis <- create.bspline.basis(c(1,156),nbasis= out0$numbasis.opt, norder = 4)
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
+smooth <- smooth.basis(day,st,tD3fdPar)
+mean(smooth$y[,1:8])
+mean(smooth$y[9:18])
+
+time_grid <- 1:156
+
+original_names <- c(
+  "it_stocks", "automobile_stocks", "fashion_stocks", "healthcare_stocks",
+  "food_stoks", "oil_stocks", "travel_stocks", "logistics_stocks"
+)
+
+# Simplified names (same order)
+short_names <- c(
+  "IT", "Auto", "Fashion", "Health",
+  "Food", "Oil", "Travel", "Logistics"
+)
+
+groups <- factor(rep(short_names, each = 8))
+head(groups, 16)
+dim(fdata_stocks)
+
+fANOVA.pointwise <- function(data, groups, t.seq = NULL, alpha = 0.05) {
+  # Check inputs
+  if (length(groups) != ncol(data)) 
+    stop("Length of 'groups' must match number of columns in 'data'.")
+  if (!is.factor(groups)) 
+    groups <- factor(groups)}
+library(dplyr)
+
+n_time <- nrow(st)
+n_groups <- length(levels(groups))
+group_levels <- levels(groups)
+pvals <- numeric(n_time)
+mean_vals <- matrix(NA, nrow = n_time, ncol = length(levels(groups)))
+colnames(mean_vals) <- levels(groups)
+
+combs <- combn(group_levels, 2)
+perm <- ncol(combs)
+pvals <- numeric(n_time)
+
+Tukey.posthoc <- matrix(NA, nrow = n_time, ncol = perm)
+colnames(Tukey.posthoc) <- apply(combs, 2, paste, collapse = " vs. ")
+data <- eval.fd(1:156, smooth$fd)
+
+for (i in 1:n_time) {
+  # Fit ANOVA for week i
+  dt <- data.frame(
+    Price = data[i, ],  # Stock prices at week i
+    Industry = groups   # Industry labels (IT, Auto, ...)
+  )
+  av <- aov(Price ~ Industry, data = dt)
+  
+  # Extract ANOVA p-value
+  pvals[i] <- summary(av)[[1]]$`Pr(>F)`[1]
+  
+  # Calculate industry means for week i
+  mean_vals[i, ] <- tapply(dt$Price, dt$Industry, mean)
+  
+  # Tukey HSD post-hoc test
+  tukey_res <- TukeyHSD(av)$Industry[, "p adj"]
+  Tukey.posthoc[i, ] <- tukey_res
+}
+sig_level <- 0.05
+alpha <- 0.05
+t.seq <- 1:156
+# Plot p-values with significance highlights
+png("ANOVA_1.png", width = 1200, height = 800, res = 150)
+plot(1:156, pvals, type = "l", lwd = 2, col = "darkred",
+     main = "Pointwise ANOVA",
+     xlab = "Time (weeks)", ylab = "p-value", ylim = c(0, 1),
+     cex.lab = 1.8,     # axis label size
+     cex.axis = 1.5,    # tick number size
+     cex.main = 2)
+abline(h = alpha, col = "blue", lty = 2, lwd = 2)
+
+pvals_adj <- p.adjust(pvals, method = "fdr")
+# Highlight significant weeks (FDR-adjusted)
+sig_weeks <- which(pvals_adj < alpha)
+points(t.seq[sig_weeks], pvals[sig_weeks], col = "red", pch = 19, cex = 0.6)
+legend("topright", legend = c("p-values", "Statistically significant "), 
+       col = c("darkred", "red"), lwd = c(2, NA), pch = c(NA, 19), bty = "n")
+dev.off()
+overall_mean <- rowMeans(data)
+col_set <- rainbow(n_groups)
+ylim_range <- range(c(mean.p, overall_mean), na.rm = TRUE) * c(0.95, 1.05)
+
+png("industry_mean_plot.png", width = 1200, height = 800, res = 150)
+industry_means <- t(sapply(1:nrow(data), function(i) {
+  tapply(data[i, ], groups, mean, na.rm = TRUE)
+}))
+
+plot(1:156, industry_means[, 1], type = "n", 
+     ylim = range(industry_means, na.rm = TRUE),
+     xlab = "Week", ylab = "Mean Stock Price", 
+     main = "Industry Mean Trajectories",
+     cex.lab = 1.8,     # axis label size
+     cex.axis = 1.5,    # tick number size
+     cex.main = 2 )
+
+col_set <- rainbow(ncol(industry_means))  # Color palette
+for (i in 1:ncol(industry_means)) {
+  lines(1:156, industry_means[, i], col = col_set[i], lwd = 2)
+}
+
+# Add legend
+legend("bottomright", legend = colnames(industry_means), 
+       col = col_set, lwd = 2, cex = 0.9)
+dev.off()
+
+opar2 <- par(mfrow = c(1, 1), ask = TRUE)
+for (i in 1:perm) {
+  plot(t.seq, Tukey.posthoc[, i], type = "l", col = "purple", lwd = 2,
+       main = paste("Tukey HSD p-values for", colnames(Tukey.posthoc)[i]),
+       xlab = "Time", ylab = "p-value", ylim = c(0, 1))
+  abline(h = alpha, col = "blue", lty = 2, lwd = 2)
+}
+par(opar2)
+## --- Return --- ##
+install.packages("funFEM")
+library(funFEM)
+
+res_v = funFEM(smooth$fd,K=5,model="AkjBk",init="kmeans",lambda=0,disp=TRUE)
+
+plot(t(smooth$fd$coefs) %*% res_v$U,col=res_v$cls,pch=19,main="Discriminative space")
+text(t(smooth$fd$coefs) %*% res_v$U)
+
+data <- eval.fd(1:156, smooth$fd)
+
+group.label <- factor(res_v$cls)
+
+fANOVA.pointwise(data=data, groups=group.label,
+                 t.seq=tsq, alpha=0.05)
+
+
+group_means <- t(apply(data, 1, function(x) {
+  tapply(x, group.label, mean)
+}))
+
+colors <- rainbow(length(levels(group.label)))
+
+# Plot all group means
+n.groups <- length(levels(group.label))
+
+# Colors for each group
+colors <- rainbow(n.groups)  # or choose manually
+
+# Now plot
+matplot(1:156, group_means, type = "l", lty = 1, col = colors,
+        xlab = "Time", ylab = "Mean Value", main = "Mean Curves per Group")
+legend("topright", legend = paste("Group", levels(group.label)),
+       col = colors, lty = 1, cex = 0.8)
+
+p.values <- sapply(1:156, function(i) {
+  summary(aov(data[i, ] ~ group.label))[[1]][["Pr(>F)"]][1]
+})
+
+plot(1:156, p.values, type = "l", lwd = 2, col = "blue",
+     xlab = "Time", ylab = "P-value", main = "Pointwise ANOVA p-values")
+abline(h = 0.05, col = "red", lty = 2)  
+
+install.packages("fdANOVA")
+library(fdANOVA)
+
+plotFANOVA(x = data, 
+           group.label = group.label, 
+           int = c(0.025, 0.975), 
+           means = TRUE)
+plotFANOVA(x = data, 
+           group.label = group.label, 
+           int = c(0.025, 0.975))
+
+plotFANOVA(x = data, group.label = group.label,
+           int = c(0.025, 0.975),separately = TRUE)
+#_________________________Funnctional Autoregressive process______________
+library(fda)
+library(far)
+basis <- create.bspline.basis(c(1,156),nbasis= out0$numbasis.opt, norder = 4)
+tD3fdPar = fdPar(basis,Lfdobj=int2Lfd(2),lambda=out0$lambda.opt)
+smooth <- smooth.basis(day,st,tD3fdPar)
+
+# Transpose
+
+
+time_grid <- 1:156
+
+eval_matrix <- t(eval.fd(1:156, smooth$fd))
+fdata_obj[1, ]$var
+fdata_obj <- far::as.fdata(eval_matrix,argvals = 1:64)
+str(fdata_obj$var)
+dim(fdata_obj$var)
+train_weeks <- 1:146
+test_weeks <- 147:156
+fdata_train <- fdata_obj$var[, train_weeks]
+fdata_train <- far::as.fdata(fdata_train,argvals = 1:64)
+fdata_test <- fdata_obj$var[, test_weeks]
+fdata_test <- far::as.fdata(fdata_test,argvals = 1:64)
+far::multplot(fdata_obj$"var", type = "l")
+# Fit FAR(1)
+
+model1 <- far(data=fdata_train, y="var", center=TRUE,na.rm=FALSE,kn=4)
+print(model1)
+
+print(model1)
+pred_far1 <- predict(model1, newdata=fdata_train, na.rm=FALSE)
+
+pred1 <-predict(model1, newdata=fdata_test, na.rm=FALSE)
+
+actual_fd <- select.fdata(fdata_test)
+error_fd <- actual_fd[[1]] - pred1[[1]]
+
+png("pred_test_set.png", width = 1000, height = 800)
+
+far::multplot(
+  pred1$"var", 
+  type = "l",
+  main = "Predicted on Test set",
+  xlab = "Stock Index",
+  ylab = "Week",
+  cex.lab = 2,
+  cex.main = 3
+)
+
+dev.off()
+
+png("predited_plot.png", width = 1000, height = 800)
+
+far::multplot(
+  pred_far1$"var", 
+  type = "l",
+  main = "Fitted values",
+  xlab = "Stock Index",
+  ylab = "Week",
+  cex.main = 3,     # Increases main title size
+  cex.lab = 2,    # Increases axis label size
+  cex.axis = 1.5
+)
+
+
+dev.off()
+
+png("errors.png", width = 1000, height = 800)
+
+far::multplot(
+  error_fd, 
+  type = "l",
+  main = "Residuals",
+  xlab = "Stock Index",
+  ylab = "Residuals",
+  cex.lab = 2,
+  cex.main = 3
+)
+
+
+dev.off()
+
+model2.cv <- far.cv(data=fdata_train, y="var",ncv=40,
+                    cvcrit = "var",
+                    center=TRUE, na.rm = FALSE)
+print(model2.cv)
+k2 <- model2.cv$minL2[1]
+
+error_mat <- unclass(as.fdata(error_fd))$var  # extract error values matrix (64 x 155)
+actual_mat <- unclass(as.fdata(actual_fd[[1]]))$var 
+
+mse <- mean(error_mat^2)
+
+# MAPE: average absolute percentage error (x100%) over all stocks and weeks
+mape <- mean(abs(error_mat / actual_mat)) * 100
+
+ise_per_week <- colSums(error_mat^2)
+mean_ise <- mean(ise_per_week)
+
+matplot(actual_fd, type = "l")
+
+dev.off()
+plot(rowMeans(eval.fd(fdobj)))
+#_________________________lag____________________
+fd_input <- t(eval_matrix)
+dim()
+fd_centered <- scale(fd_input, center = TRUE, scale = FALSE)  # Don't scale
+X_t  <- fd_centered[5:156, ]     # 154 x 64
+X_t2 <- fd_centered[1:152, ]
+Gamma2 <- t(X_t) %*% X_t2 / (nrow(X_t) - 1)  # 64 x 64 matrix
+
+# 3D surface plot (optional)
+grid <- seq(0, 1, length.out = 64)
+z <- Gamma1
+
+# Create a color palette
+nbcol <- 100  # Number of colors
+color_palette <- heat.colors(nbcol)  # Or try: terrain.colors(), viridis::viridis(nbcol), etc.
+
+# Compute breaks and assign colors to z-values
+z_facet <- z[-1, -1] + z[-1, -ncol(z)] + z[-nrow(z), -1] + z[-nrow(z), -ncol(z)]
+z_facet <- z_facet / 4  # Average z value of each facet
+facet_col <- color_palette[cut(z_facet, nbcol)]
+
+# Plot with colors
+png("Gamma2_surface.png", width = 800, height = 800)
+persp(
+  x = grid, y = grid, z = z,
+  theta = 50, phi = 30, expand = 0.5,
+  col = facet_col, ticktype = "detailed",
+  xlab = "u (Lagged domain)", ylab = "s (Current domain)", zlab = "Covariance"
+)
+dev.off()
+getwd()
+
+#___________________________fpca_________________________
+
+library(ftsa)
+library(vars)
+
+stock_grid <- 1:64
+
+# Create functional time series object
+train_weeks <- 1:146
+test_weeks <- 147:156
+
+fts_train <- fts(x = stock_grid, y = eval_matrix[,train_weeks])
+
+fts_test <- fts(x = stock_grid, y = eval_matrix[,test_weeks])
+
+model.ftsm <- ftsm(fts_train, order=3)
+model.ftsm$varprop
+
+png("residuals_ftsm_plot.png", width = 1000, height = 800)
+
+plot(model.ftsm$residuals, 
+     main = "Residuals",
+     ylab = "Residuals",
+     xlab = "Stock index",cex.main = 3,     # Increases main title size
+     cex.lab = 2,    # Increases axis label size
+     cex.axis = 1.5)
+
+dev.off()
+fts_test$y
+forecast.ftsm <- predict(model.ftsm, h = 10)
+names(forecast.ftsm)
+png("ftsm_predited_plot.png", width = 1000, height = 800)
+plot(forecast.ftsm$mean,
+     main = "Prediction on Test set",
+     xlab = "Stock Index",
+     ylab = "Forecasted Value",
+     cex.main = 3,
+     cex.lab = 3,
+     cex.axis = 1.5)
+dev.off()
+
+
+train_resid <- model.ftsm$residuals
+
+# Mean squared error on training set
+mse_train <- mean(train_resid$y^2, na.rm = TRUE)
+print(paste("Train MSE:", round(mse_train, 6)))
+
+y_forecast <- forecast.ftsm$mean$y     # Forecasted: matrix [stock points x 10]
+y_actual   <- fts_test$y               # Actual: matrix [stock points x 10]
+
+mse_test <- mean((y_actual - y_forecast)^2, na.rm = TRUE)
+print(paste("Test MSE:", round(mse_test, 6)))
